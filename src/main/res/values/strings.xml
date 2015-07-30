@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">RentalApp</string>
+    <string name="app_id">355198514515820</string>
+    <string name="title_activity_rental_maps">Map</string>
+    <string name="title_activity_rental_main">RentalMainActivity</string>
+    <string name="title_activity_rental_login">Rental Login</string>
+    <string name="title_activity_post">Post a Rental Ad</string>
+
+    <string name="title_section1">Login</string>
+    <string name="title_section2">All Categories</string>
+    <string name="title_section3">Cameras</string>
+    <string name="title_section4">Cars</string>
+    <string name="title_section5">Bikes</string>
+    <string name="title_section6">Others</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_example">Example action</string>
+
+    <string name="action_settings">Sign Out</string>
+
+    <string-array name="post_category">
+        <item>Cameras</item>
+        <item>Cars</item>
+        <item>Bikes</item>
+        <item>Mobiles or Tablets</item>
+        <item>Televisions</item>
+        <item>Printers</item>
+        <item>Others</item>
+    </string-array>
+
+    <string-array name="post_duration">
+        <item>Hour</item>
+        <item>Day</item>
+        <item>Week</item>
+        <item>Month</item>
+        <item>Year</item>
+    </string-array>
+</resources>
