@@ -73,10 +73,22 @@ public class RentalMainActivity extends ActionBarActivity
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
     private class PostsData {
+        private String mPostId = null;
         private String mPostTitle = null;
         private String mPostDescription = null;
         private String mPostCategory = null;
         private LatLng mLocationCoords = null;
+        private int mPostPrice = -1;
+        private String mPostDuration = null;
+        private byte[] mPostImage = null;
+
+        public String getPostId() {
+            return mPostId;
+        }
+
+        public void setPostId(String mPostId) {
+            this.mPostId = mPostId;
+        }
 
         public String getPostTitle() {
             return mPostTitle;
@@ -109,7 +121,33 @@ public class RentalMainActivity extends ActionBarActivity
         public void setLocationCoords(LatLng mLocationCoords) {
             this.mLocationCoords = mLocationCoords;
         }
-    };
+
+        public int getPostPrice() {
+            return mPostPrice;
+        }
+
+        public void setPostPrice(int mPostPrice) {
+            this.mPostPrice = mPostPrice;
+        }
+
+        public String getPostDuration() {
+            return mPostDuration;
+        }
+
+        public void setPostDuration(String mPostDuration) {
+            this.mPostDuration = mPostDuration;
+        }
+
+        public byte[] getPostImage() {
+            return mPostImage;
+        }
+
+        public void setPostImage(byte[] mPostImage) {
+            this.mPostImage = mPostImage;
+        }
+    }
+
+    ;
 
     private List<PostsData> mPostDataList = new ArrayList<PostsData>();
     private HashMap<String, Integer> mIconsList = new HashMap<>();
@@ -136,10 +174,13 @@ public class RentalMainActivity extends ActionBarActivity
                 .addOnConnectionFailedListener(this)
                 .build();
 
-        mIconsList.put("Car",R.drawable.ic_directions_car_black_36dp);
-        mIconsList.put("Bike",R.drawable.ic_directions_bike_black_36dp);
-        mIconsList.put("Camera", R.drawable.ic_local_see_black_36dp);
-        mIconsList.put("Printer", R.drawable.ic_local_printshop_black_36dp);
+        mIconsList.put("Cars", R.drawable.ic_directions_car_black_36dp);
+        mIconsList.put("Bikes", R.drawable.ic_directions_bike_black_36dp);
+        mIconsList.put("Cameras", R.drawable.ic_local_see_black_36dp);
+        mIconsList.put("Printers", R.drawable.ic_local_printshop_black_36dp);
+        mIconsList.put("Mobiles or Tablets", R.drawable.ic_phone_android_black_36dp);
+        mIconsList.put("Televisions", R.drawable.ic_tv_black_36dp);
+        mIconsList.put("Others", R.mipmap.ic_launcher);
 
         /*getApplicationContext().getContentResolver().registerContentObserver(Uri.parse("content://com.rentalapp/POST_TABLE"), true, new ContentObserver(null) {
             @Override
@@ -167,6 +208,7 @@ public class RentalMainActivity extends ActionBarActivity
         fragmentManager.beginTransaction()
                 .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
                 .commit();*/
+        Toast.makeText(getApplicationContext(), "Drawer selected - " + position, Toast.LENGTH_SHORT).show();
     }
 
     public void onSectionAttached(int number) {
@@ -231,12 +273,10 @@ public class RentalMainActivity extends ActionBarActivity
 
     @Override
     public void onClick(View v) {
-        if(v.getId() == R.id.imageButton)
-        {
+        if (v.getId() == R.id.imageButton) {
             Toast.makeText(getApplicationContext(), "Search Activity will be launched", Toast.LENGTH_SHORT).show();
         }
-        if (v.getId() == R.id.button)
-        {
+        if (v.getId() == R.id.button) {
             //TBD Launch Add Post Activity
             //Toast.makeText(getApplicationContext(), "Post a Rental Ad Activity will be Launched ", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, PostMainActivity.class));
@@ -253,12 +293,11 @@ public class RentalMainActivity extends ActionBarActivity
     protected void onResume() {
         super.onResume();
         mGoogleLocation.connect();
-        if(mMap != null)
+        if (mMap != null)
             mMap.clear();
 
         Cursor rentalCursor = getApplicationContext().getContentResolver().query(Uri.parse("content://com.database.rentalapp/POST_TABLE"), null, null, null, null);
-        if(rentalCursor != null && rentalCursor.getCount() > 0)
-        {
+        if (rentalCursor != null && rentalCursor.getCount() > 0) {
             mPostDataList.clear();
 
             while (rentalCursor.moveToNext()) {
@@ -269,6 +308,14 @@ public class RentalMainActivity extends ActionBarActivity
                 postsData.setPostTitle(name);
                 postsData.setPostDescription(rentalCursor.getString(rentalCursor.getColumnIndex("POST_DESCRIPTION")));
                 postsData.setPostCategory(rentalCursor.getString(rentalCursor.getColumnIndex("POST_CATEGORY")));
+                postsData.setPostPrice(rentalCursor.getInt(rentalCursor.getColumnIndex("POST_PRICE")));
+                postsData.setPostDuration(rentalCursor.getString(rentalCursor.getColumnIndex("POST_DURATION")));
+                postsData.setPostImage(rentalCursor.getBlob(rentalCursor.getColumnIndex("POST_IMAGE")));
+
+                Double latLocation = rentalCursor.getDouble(rentalCursor.getColumnIndex("POST_LATITUDE"));
+                Double longLocation = rentalCursor.getDouble(rentalCursor.getColumnIndex("POST_LONGITUDE"));
+
+                postsData.setLocationCoords(new LatLng(latLocation, longLocation));
 
                 mPostDataList.add(postsData);
             }
@@ -278,9 +325,7 @@ public class RentalMainActivity extends ActionBarActivity
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        if(requestCode == 1001)
-        {
+        if (requestCode == 1001) {
             String accName = data.getStringExtra("Name");
         }
         super.onActivityResult(requestCode, resultCode, data);
@@ -288,13 +333,34 @@ public class RentalMainActivity extends ActionBarActivity
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-
         return false;
     }
 
     @Override
     public void onInfoWindowClick(Marker marker) {
-        Toast.makeText(getApplicationContext(), marker.getTitle() + " Detail Description View will be launched", Toast.LENGTH_SHORT).show();
+        Intent markerIntent = new Intent(this, DetailViewActivity.class);
+        Bundle detailPost = new Bundle();
+
+
+        int size = mPostDataList.size();
+        for (int pos = 0; pos < size; pos++) {
+            if (mPostDataList.get(pos).getPostId().equalsIgnoreCase(marker.getId())) {
+                detailPost.putString("title", mPostDataList.get(pos).getPostTitle());
+                detailPost.putString("description", mPostDataList.get(pos).getPostDescription());
+                detailPost.putInt("price", mPostDataList.get(pos).getPostPrice());
+                detailPost.putString("duration", mPostDataList.get(pos).getPostDuration());
+                detailPost.putByteArray("image", mPostDataList.get(pos).getPostImage());
+            /*markerIntent.putExtra("title", mPostDataList.get(pos).getPostTitle());
+            markerIntent.putExtra("description", mPostDataList.get(pos).getPostDescription());
+            markerIntent.putExtra("price", mPostDataList.get(pos).getPostPrice());
+            markerIntent.putExtra("duration", mPostDataList.get(pos).getPostDuration());
+            markerIntent.putExtra("image", mPostDataList.get(pos).getPostImage());*/
+                markerIntent.putExtra("post_detail", detailPost);
+                break;
+            }
+        }
+
+        startActivity(markerIntent);
     }
 
     @Override
@@ -304,57 +370,63 @@ public class RentalMainActivity extends ActionBarActivity
                 REQUEST,
                 this);*/
         Location loc = LocationServices.FusedLocationApi.getLastLocation(mGoogleLocation);
-        LatLng lng = new LatLng(loc.getLatitude(), loc.getLongitude());
-        MarkerOptions myMarker =
-                new MarkerOptions()
-                        .position(lng)
-                        .title("Sony Cyber shot DSC-HX400V")
-                        .snippet("Owned by Jeelani Basha")
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_local_see_black_36dp));
-        mMap.addMarker(myMarker);
-        LatLng lng_1 = new LatLng(loc.getLatitude()+0.00210, loc.getLongitude());
-        MarkerOptions myMarker_1 =
-                new MarkerOptions()
-                        .position(lng_1)
-                        .title("Audi Q3")
-                        .snippet("Owned by Venkata Narayana")
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_directions_car_black_36dp));
-        mMap.addMarker(myMarker_1);
-        LatLng lng_2 = new LatLng(loc.getLatitude(), loc.getLongitude()+0.00210);
-        MarkerOptions myMarker_2 =
-                new MarkerOptions()
-                        .position(lng_2)
-                        .title("Kawasaki Ninja 300")
-                        .snippet("Owned by Prasada")
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_directions_bike_black_36dp));
-        mMap.addMarker(myMarker_2);
-        LatLng lng_3 = new LatLng(loc.getLatitude() - 0.00110, loc.getLongitude() - 0.00110);
-        MarkerOptions myMarker_3 =
-                new MarkerOptions()
-                        .position(lng_3)
-                        .title("HP LaserJet Pro 100")
-                        .snippet("Owned by Sainath");
-        myMarker_3.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_local_printshop_black_36dp));
+        if (loc != null) {
+            LatLng lng = new LatLng(loc.getLatitude(), loc.getLongitude());
+            /*MarkerOptions myMarker =
+                    new MarkerOptions()
+                            .position(lng)
+                            .title("Sony Cyber shot DSC-HX400V")
+                            .snippet("Owned by Jeelani Basha")
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_local_see_black_36dp));
+            mMap.addMarker(myMarker);
+            LatLng lng_1 = new LatLng(loc.getLatitude() + 0.00210, loc.getLongitude());
+            MarkerOptions myMarker_1 =
+                    new MarkerOptions()
+                            .position(lng_1)
+                            .title("Audi Q3")
+                            .snippet("Owned by Venkata Narayana")
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_directions_car_black_36dp));
+            mMap.addMarker(myMarker_1);
+            LatLng lng_2 = new LatLng(loc.getLatitude(), loc.getLongitude() + 0.00210);
+            MarkerOptions myMarker_2 =
+                    new MarkerOptions()
+                            .position(lng_2)
+                            .title("Kawasaki Ninja 300")
+                            .snippet("Owned by Prasada")
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_directions_bike_black_36dp));
+            mMap.addMarker(myMarker_2);
+            LatLng lng_3 = new LatLng(loc.getLatitude() - 0.00110, loc.getLongitude() - 0.00110);
+            MarkerOptions myMarker_3 =
+                    new MarkerOptions()
+                            .position(lng_3)
+                            .title("HP LaserJet Pro 100")
+                            .snippet("Owned by Sainath");
 
-        mMap.addMarker(myMarker_3);
-        /*LatLng lng_3 = new LatLng(loc.getLatitude() - 0.00110, loc.getLongitude() - 0.00110);
-        if(mPostDataList != null && mPostDataList.size() > 0) {
-            for (int position = 0; position < mPostDataList.size(); position++) {
-                MarkerOptions myMarker_3 =
-                        new MarkerOptions()
-                                .position(lng_3)
-                                .title(mPostDataList.get(position).getPostTitle())
-                                .snippet(mPostDataList.get(position).getPostDescription())
-                                .icon(BitmapDescriptorFactory.fromResource(mIconsList.get(mPostDataList.get(position).getPostCategory())));
-                mMap.addMarker(myMarker_3);
+            myMarker_3.icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_local_printshop_black_36dp));
+
+            mMap.addMarker(myMarker_3);*/
+            //LatLng lng_3 = new LatLng(loc.getLatitude() - 0.00110, loc.getLongitude() - 0.00110);
+            if (mPostDataList != null && mPostDataList.size() > 0) {
+                MarkerOptions myMarker_3 = new MarkerOptions();
+                for (int position = 0; position < mPostDataList.size(); position++) {
+                    if (myMarker_3 != null) {
+                        myMarker_3.position(mPostDataList.get(position).getLocationCoords());
+                        myMarker_3.title(mPostDataList.get(position).getPostTitle());
+                        myMarker_3.snippet(mPostDataList.get(position).getPostDescription());
+                        myMarker_3.icon(BitmapDescriptorFactory.fromResource(mIconsList.get(mPostDataList.get(position).getPostCategory())));
+                        mPostDataList.get(position).setPostId(mMap.addMarker(myMarker_3).getId());
+                    } else {
+                        Toast.makeText(getApplicationContext(), "Marker Options is null", Toast.LENGTH_SHORT).show();
+                    }
+                }
             }
-        }*/
-        CameraPosition Location =
-                new CameraPosition.Builder().target(lng)
-                        .zoom(16f)
-                        .bearing(100)
-                        .build();
-        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(Location));
+            CameraPosition Location =
+                    new CameraPosition.Builder().target(lng)
+                            .zoom(16f)
+                            .bearing(100)
+                            .build();
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(Location));
+        }
         mMap.setOnMarkerClickListener(this);
         mMap.setOnInfoWindowClickListener(this);
     }
@@ -391,8 +463,8 @@ public class RentalMainActivity extends ActionBarActivity
     /**
      * A placeholder fragment containing a simple view.
      */
-    public static class PlaceholderFragment extends Fragment{
-          /**
+    public static class PlaceholderFragment extends Fragment {
+        /**
          * The fragment argument representing the section number for this
          * fragment.
          */

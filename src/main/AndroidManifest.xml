@@ -26,7 +26,7 @@
         <activity
             android:name=".RentalMainActivity"
             android:label="@string/app_name"
-            android:screenOrientation="portrait">
+            android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -36,17 +36,23 @@
         <activity
             android:name=".RentalLoginActivity"
             android:label="@string/title_activity_rental_login"
+            android:parentActivityName=".RentalMainActivity"
             android:windowSoftInputMode="adjustResize|stateVisible" >
-            <!--<meta-data
+            <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.sainath.rentalapp.RentalMainActivity" />-->
+                android:value="com.sainath.rentalapp.RentalMainActivity" />
         </activity>
-        <activity android:name=".PostMainActivity"
+        <activity
+            android:name=".PostMainActivity"
+            android:configChanges="keyboard|keyboardHidden"
             android:label="@string/title_activity_post"
             android:theme="@style/AppTheme"
-            android:configChanges="keyboard|keyboardHidden"
-            android:windowSoftInputMode="adjustResize|stateVisible"
-            />
+            android:parentActivityName=".RentalMainActivity"
+            android:windowSoftInputMode="adjustResize|stateVisible" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.sainath.rentalapp.RentalMainActivity" />
+        </activity>
         <activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
@@ -69,13 +75,15 @@
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="@string/google_maps_key" />
 
-        <!--<activity
+        <!--
+        <activity
             android:name=".RentalMapsActivity"
             android:label="@string/title_activity_rental_maps" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.sainath.rentalapp.RentalLoginActivity" />
-        </activity>-->
+        </activity>
+        -->
         <provider
             android:name="com.database.rentalapp.RentalContentProvider"
             android:authorities="com.database.rentalapp"
@@ -83,6 +91,22 @@
             android:exported="true" >
         </provider>
 
+        <activity
+            android:name=".DetailViewActivity"
+            android:theme="@style/DialogTheme"
+            android:parentActivityName=".RentalMainActivity" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.sainath.rentalapp.RentalMainActivity" />
+        </activity>
+
+        <activity android:name=".SelectLocationActivity"
+            android:parentActivityName=".PostMainActivity" >
+
+            </activity>
+        <service
+            android:name="com.service.rentalapp.FetchAddressIntentService"
+            android:exported="false"/>
     </application>
 
 </manifest>

@@ -12,7 +12,7 @@ public class RentalDatabaseHelper extends SQLiteOpenHelper {
 
     private final static String POST_TABLE = "CREATE TABLE IF NOT EXISTS POST_TABLE (_ID INTEGER PRIMARY KEY AUTOINCREMENT ," +
             "POST_TITLE TEXT NOT NULL, POST_DESCRIPTION TEXT NOT NULL, POST_PRICE INTEGER NOT NULL, POST_CATEGORY TEXT NOT NULL," +
-            "POST_LOCATION TEXT) ";
+            "POST_LATITUDE INTEGER, POST_LONGITUDE INTEGER, POST_ADDRESS TEXT, POST_DURATION TEXT, POST_IMAGE BLOB) ";
 
     public RentalDatabaseHelper(Context context) {
         super(context, "RentalPost", null, 1);
