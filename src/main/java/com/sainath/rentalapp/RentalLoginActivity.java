@@ -33,12 +33,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
-import com.facebook.login.LoginResult;
-import com.facebook.login.widget.LoginButton;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -73,9 +67,9 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    private CallbackManager callbackManager;
+   /* private CallbackManager callbackManager;
     private Boolean isFacebookLoggedIn = false;
-    private LoginButton fbLoginBtn = null;
+    private LoginButton fbLoginBtn = null;*/
     private GoogleApiClient mGoogleClient = null;
     private static final int RC_SIGN_IN = 0;
     /* Is there a ConnectionResult resolution in progress? */
@@ -88,13 +82,13 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        FacebookSdk.sdkInitialize(getApplicationContext());
+        /*FacebookSdk.sdkInitialize(getApplicationContext());
 
-        callbackManager = CallbackManager.Factory.create();
+        callbackManager = CallbackManager.Factory.create();*/
 
         setContentView(R.layout.activity_rental_login);
 
-        fbLoginBtn = (LoginButton) findViewById(R.id.fb_login_button);
+        /*fbLoginBtn = (LoginButton) findViewById(R.id.fb_login_button);
         fbLoginBtn.setReadPermissions("user_friends");
         fbLoginBtn.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
@@ -102,12 +96,12 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
                 Log.i(TAG, "Granted Permissions " + loginResult.getAccessToken().getApplicationId());
                 Log.i(TAG, "Granted Permissions " + loginResult.getRecentlyGrantedPermissions().toString());
                 Toast.makeText(getApplicationContext(), "Facebook login Success", Toast.LENGTH_SHORT).show();
-               /* Profile fbProfile = Profile.getCurrentProfile();
+               *//* Profile fbProfile = Profile.getCurrentProfile();
                 if(fbProfile != null) {
                     Log.i(TAG, "Profile Name " + fbProfile.getFirstName());
                     Log.i(TAG, "Profile Name " + fbProfile.getProfilePictureUri(20, 20).toString());
                     Toast.makeText(getApplicationContext(), "Facebook login Success " + fbProfile.getFirstName(), Toast.LENGTH_SHORT).show();
-                }*/
+                }*//*
             }
 
             @Override
@@ -120,7 +114,7 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
                 Log.e(TAG, "Facebook login Error" + error.toString());
                 Toast.makeText(getApplicationContext(), "Facebook login Error" + error.toString(), Toast.LENGTH_SHORT).show();
             }
-        });
+        });*/
 
         mGoogleClient = new GoogleApiClient.Builder(this)
                                 .addConnectionCallbacks(this)
@@ -428,7 +422,7 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
             mIsResolving = false;
             mGoogleClient.connect();
         }
-        callbackManager.onActivityResult(requestCode, resultCode, data);
+        /*callbackManager.onActivityResult(requestCode, resultCode, data);*/
     }
 
     @Override
@@ -446,8 +440,8 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
         {
             case R.id.sign_out:
                 Toast.makeText(getApplicationContext(), "Sign out is clicked", Toast.LENGTH_SHORT).show();
-                if(isFacebookLoggedIn)
-                    isFacebookLoggedIn = false;
+               /* if(isFacebookLoggedIn)
+                    isFacebookLoggedIn = false;*/
                 if (mGoogleClient.isConnected()) {
                     Plus.AccountApi.clearDefaultAccount(mGoogleClient);
                     mGoogleClient.disconnect();

@@ -36,7 +36,7 @@
                 android:layout_marginTop="16dp" android:text="@string/action_sign_in"
                 android:textStyle="bold" />
 
-            <com.facebook.login.widget.LoginButton
+           <!-- <com.facebook.login.widget.LoginButton
                 android:id="@+id/fb_login_button"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -45,7 +45,7 @@
                 android:layout_gravity="center_horizontal"
                 facebook:com_facebook_confirm_logout="false"
                 facebook:com_facebook_tooltip_mode="never_display"
-                android:typeface="sans" />
+                android:typeface="sans" />-->
 
             <com.google.android.gms.common.SignInButton
                 android:id="@+id/sign_in_button"

@@ -6,4 +6,28 @@
         app:showAsAction="withText|ifRoom" />-->
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
         android:orderInCategory="100" app:showAsAction="never" />
+
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/my_ads"
+            android:checked="false"
+            android:title="My Ads" />
+
+        <item
+            android:id="@+id/favourites"
+            android:checked="false"
+            android:title="My Favorites" />
+
+        <item
+            android:id="@+id/invite"
+            android:checked="false"
+            android:title="Invite Friends" />
+
+        <item
+            android:id="@+id/rateus"
+            android:checked="false"
+            android:title="Rate Us" />
+
+    </group>
 </menu>

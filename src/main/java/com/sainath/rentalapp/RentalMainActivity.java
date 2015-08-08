@@ -6,10 +6,13 @@ import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.design.widget.NavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -38,7 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class RentalMainActivity extends ActionBarActivity
+public class RentalMainActivity extends AppCompatActivity
         implements NavigationDrawerFragment.NavigationDrawerCallbacks,
         OnMapReadyCallback,
         GoogleMap.OnMyLocationButtonClickListener,
@@ -53,6 +56,12 @@ public class RentalMainActivity extends ActionBarActivity
      * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
      */
     private NavigationDrawerFragment mNavigationDrawerFragment;
+
+    private NavigationView navigationView;
+
+    private DrawerLayout drawerLayout;
+
+    private Toolbar toolbar;
 
     /**
      * Used to store the last screen title. For use in {@link #restoreActionBar()}.
@@ -157,14 +166,84 @@ public class RentalMainActivity extends ActionBarActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rental_main);
 
-        mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+        /*mNavigationDrawerFragment = (NavigationDrawerFragment)
+                getSupportFragmentManager().findFragmentById(R.id.navigation_view);*/
         mTitle = getTitle();
 
         // Set up the drawer.
-        mNavigationDrawerFragment.setUp(
+        /*mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));
+                (DrawerLayout) findViewById(R.id.drawer_layout));*/
+
+        // Initializing Toolbar and setting it as the actionbar
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        //Initializing NavigationView
+        navigationView = (NavigationView) findViewById(R.id.navigation_view);
+
+        //Setting Navigation View Item Selected Listener to handle the item click of the navigation menu
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+
+            // This method will trigger on item Click of navigation menu
+            @Override
+            public boolean onNavigationItemSelected(MenuItem menuItem) {
+
+
+                //Checking if the item is in checked state or not, if not make it in checked state
+                if(menuItem.isChecked()) menuItem.setChecked(false);
+                else menuItem.setChecked(true);
+
+                //Closing drawer on item click
+                drawerLayout.closeDrawers();
+
+                //Check to see which item was being clicked and perform appropriate action
+                switch (menuItem.getItemId()){
+
+                    case R.id.my_ads:
+                        Toast.makeText(getApplicationContext(), "Menu from Drawer is called", Toast.LENGTH_SHORT).show();
+                        break;
+
+                    case R.id.favourites:
+                        break;
+
+                    case R.id.invite:
+                        break;
+
+                    case R.id.rateus:
+                        break;
+
+                    default:
+                        break;
+                }
+                return true;
+            }
+        });
+
+        // Initializing Drawer Layout and ActionBarToggle
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this,drawerLayout,toolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close){
+
+            @Override
+            public void onDrawerClosed(View drawerView) {
+                // Code here will be triggered once the drawer closes as we dont want anything to happen so we leave this blank
+                super.onDrawerClosed(drawerView);
+            }
+
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                // Code here will be triggered once the drawer open as we dont want anything to happen so we leave this blank
+
+                super.onDrawerOpened(drawerView);
+            }
+        };
+
+        //Setting the actionbarToggle to drawer layout
+        drawerLayout.setDrawerListener(actionBarDrawerToggle);
+
+        //calling sync state is necessay or else your hamburger icon wont show up
+        actionBarDrawerToggle.syncState();
+
 
         ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
 
@@ -245,14 +324,14 @@ public class RentalMainActivity extends ActionBarActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        if (!mNavigationDrawerFragment.isDrawerOpen()) {
+        /*if (!mNavigationDrawerFragment.isDrawerOpen()) {
             // Only show items in the action bar relevant to this screen
             // if the drawer is not showing. Otherwise, let the drawer
             // decide what to show in the action bar.
             getMenuInflater().inflate(R.menu.rental_main, menu);
             restoreActionBar();
             return true;
-        }
+        }*/
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -274,13 +353,14 @@ public class RentalMainActivity extends ActionBarActivity
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.imageButton) {
-            Toast.makeText(getApplicationContext(), "Search Activity will be launched", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(getApplicationContext(), "Search Activity will be launched", Toast.LENGTH_SHORT).show();
+            startActivity(new Intent(this, PostMainActivity.class));
         }
-        if (v.getId() == R.id.button) {
+        /*if (v.getId() == R.id.button) {
             //TBD Launch Add Post Activity
             //Toast.makeText(getApplicationContext(), "Post a Rental Ad Activity will be Launched ", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, PostMainActivity.class));
-        }
+        }*/
     }
 
     @Override
@@ -423,7 +503,6 @@ public class RentalMainActivity extends ActionBarActivity
             CameraPosition Location =
                     new CameraPosition.Builder().target(lng)
                             .zoom(16f)
-                            .bearing(100)
                             .build();
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(Location));
         }

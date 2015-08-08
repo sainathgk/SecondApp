@@ -36,6 +36,7 @@
         <activity
             android:name=".RentalLoginActivity"
             android:label="@string/title_activity_rental_login"
+            android:theme="@style/UITheme"
             android:parentActivityName=".RentalMainActivity"
             android:windowSoftInputMode="adjustResize|stateVisible" >
             <meta-data
@@ -46,14 +47,14 @@
             android:name=".PostMainActivity"
             android:configChanges="keyboard|keyboardHidden"
             android:label="@string/title_activity_post"
-            android:theme="@style/AppTheme"
+            android:theme="@style/UITheme"
             android:parentActivityName=".RentalMainActivity"
             android:windowSoftInputMode="adjustResize|stateVisible" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.sainath.rentalapp.RentalMainActivity" />
         </activity>
-        <activity
+        <!--<activity
             android:name="com.facebook.FacebookActivity"
             android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
             android:label="@string/app_name"
@@ -66,7 +67,7 @@
         <provider
             android:name="com.facebook.FacebookContentProvider"
             android:authorities="com.facebook.app.FacebookContentProvider355198514515820"
-            android:exported="true" />
+            android:exported="true" />-->
 
         <meta-data
             android:name="com.google.android.gms.version"

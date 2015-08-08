@@ -3,22 +3,26 @@ package com.sainath.rentalapp;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.ActionBar;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.Locale;
 
 
-public class DetailViewActivity extends ActionBarActivity {
+public class DetailViewActivity extends FragmentActivity implements ActionBar.TabListener {
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -37,8 +41,24 @@ public class DetailViewActivity extends ActionBarActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        this.requestWindowFeature(Window.FEATURE_ACTION_BAR);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND, WindowManager.LayoutParams.FLAG_DIM_BEHIND);
+        WindowManager.LayoutParams params = this.getWindow().getAttributes();
+        params.alpha = 1.0f;
+        params.dimAmount = 0f;
+        this.getWindow().setAttributes((android.view.WindowManager.LayoutParams) params);
+
+        // This sets the window size, while working around the IllegalStateException thrown by ActionBarView
+        this.getWindow().setLayout(600, 1000);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail_view);
+
+
+        // Set up the action bar.
+        /*final ActionBar actionBar = getSupportActionBar();
+        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);*/
+
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -48,6 +68,27 @@ public class DetailViewActivity extends ActionBarActivity {
         mViewPager = (ViewPager) findViewById(R.id.pager);
         mViewPager.setAdapter(mSectionsPagerAdapter);
 
+        // When swiping between different sections, select the corresponding
+        // tab. We can also use ActionBar.Tab#select() to do this if we have
+        // a reference to the Tab.
+        mViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+            @Override
+            public void onPageSelected(int position) {
+                //actionBar.setSelectedNavigationItem(position);
+            }
+        });
+
+        // For each of the sections in the app, add a tab to the action bar.
+        for (int i = 0; i < mSectionsPagerAdapter.getCount(); i++) {
+            // Create a tab with text corresponding to the page title defined by
+            // the adapter. Also specify this Activity object, which implements
+            // the TabListener interface, as the callback (listener) for when
+            // this tab is selected.
+            /*actionBar.addTab(
+                    actionBar.newTab()
+                            .setText(mSectionsPagerAdapter.getPageTitle(i))
+                            .setTabListener(this));*/
+        }
     }
 
 
@@ -73,6 +114,20 @@ public class DetailViewActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction ft) {
+        mViewPager.setCurrentItem(tab.getPosition(),true);
+    }
+
+    @Override
+    public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction ft) {
+
+    }
+
+    @Override
+    public void onTabReselected(ActionBar.Tab tab, FragmentTransaction ft) {
+
+    }
 
     /**
      * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
@@ -96,7 +151,7 @@ public class DetailViewActivity extends ActionBarActivity {
         @Override
         public int getCount() {
             // Show 3 total pages.
-            return 1;
+            return 2;
         }
 
         @Override
@@ -144,16 +199,18 @@ public class DetailViewActivity extends ActionBarActivity {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_detail_view, container, false);
-            Bundle postDetail = getArguments().getBundle("post_bundle");
-            if(postDetail != null) {
-                ((TextView) rootView.findViewById(R.id.section_label)).setText(postDetail.getString("title"));
-                ((TextView) rootView.findViewById(R.id.detail_desc_textView)).setText(postDetail.getString("description"));
-                byte[] bitmapBytes = postDetail.getByteArray("image");
-                if (bitmapBytes != null)
-                    ((ImageView) rootView.findViewById(R.id.detail_imageView)).setImageBitmap(BitmapFactory.decodeByteArray(bitmapBytes, 0, bitmapBytes.length));
+            if (getArguments().getInt(ARG_SECTION_NUMBER) == 1) {
+                Bundle postDetail = getArguments().getBundle("post_bundle");
+                if (postDetail != null) {
+                    ((TextView) rootView.findViewById(R.id.section_label)).setText(postDetail.getString("title"));
+                    ((TextView) rootView.findViewById(R.id.detail_desc_textView)).setText(postDetail.getString("description"));
+                    byte[] bitmapBytes = postDetail.getByteArray("image");
+                    if (bitmapBytes != null)
+                        ((ImageView) rootView.findViewById(R.id.detail_imageView)).setImageBitmap(BitmapFactory.decodeByteArray(bitmapBytes, 0, bitmapBytes.length));
 
-                String priceText = getResources().getString(R.string.price_detail_view, postDetail.getInt("price"), postDetail.getString("duration", "Hour"));
-                ((TextView) rootView.findViewById(R.id.price_textView)).setText(priceText);
+                    String priceText = getResources().getString(R.string.price_detail_view, postDetail.getInt("price"), postDetail.getString("duration", "Hour"));
+                    ((TextView) rootView.findViewById(R.id.price_textView)).setText(priceText);
+                }
             }
             return rootView;
         }
