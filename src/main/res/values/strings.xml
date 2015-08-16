@@ -20,6 +20,18 @@
 
     <string name="action_settings">Sign Out</string>
 
+    <string-array name="spin_category">
+        <item>Rental App</item>
+        <item>All</item>
+        <item>Cameras</item>
+        <item>Cars</item>
+        <item>Bikes</item>
+        <item>Mobiles or Tablets</item>
+        <item>Televisions</item>
+        <item>Printers</item>
+        <item>Others</item>
+    </string-array>
+
     <string name="category_title">Select Category</string>
     <string-array name="post_category">
         <item>Cameras</item>
@@ -54,6 +66,8 @@
     <string name="no_location_data_provided">No location data provided</string>
     <string name="service_not_available">Sorry, the service is not available</string>
     <string name="invalid_lat_long_used">Invalid latitude or longitude used</string>
+
+    <string name="search">Search</string>
 
     <string name="hello_world">Hello world!</string>
 </resources>

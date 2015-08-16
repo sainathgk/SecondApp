@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.sainath.rentalapp" >
+    package="com.sainath.rentalapp">
 
     <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -22,11 +22,10 @@
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name=".RentalMainActivity"
-            android:label="@string/app_name"
-            android:screenOrientation="portrait" >
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -36,9 +35,9 @@
         <activity
             android:name=".RentalLoginActivity"
             android:label="@string/title_activity_rental_login"
-            android:theme="@style/UITheme"
             android:parentActivityName=".RentalMainActivity"
-            android:windowSoftInputMode="adjustResize|stateVisible" >
+            android:theme="@style/UITheme"
+            android:windowSoftInputMode="adjustResize|stateVisible">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.sainath.rentalapp.RentalMainActivity" />
@@ -47,9 +46,9 @@
             android:name=".PostMainActivity"
             android:configChanges="keyboard|keyboardHidden"
             android:label="@string/title_activity_post"
-            android:theme="@style/UITheme"
             android:parentActivityName=".RentalMainActivity"
-            android:windowSoftInputMode="adjustResize|stateVisible" >
+            android:theme="@style/UITheme"
+            android:windowSoftInputMode="adjustResize|stateVisible">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.sainath.rentalapp.RentalMainActivity" />
@@ -76,38 +75,30 @@
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="@string/google_maps_key" />
 
-        <!--
-        <activity
-            android:name=".RentalMapsActivity"
-            android:label="@string/title_activity_rental_maps" >
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.sainath.rentalapp.RentalLoginActivity" />
-        </activity>
-        -->
         <provider
             android:name="com.database.rentalapp.RentalContentProvider"
             android:authorities="com.database.rentalapp"
             android:enabled="true"
-            android:exported="true" >
-        </provider>
+            android:exported="true"></provider>
 
         <activity
             android:name=".DetailViewActivity"
-            android:theme="@style/DialogTheme"
-            android:parentActivityName=".RentalMainActivity" >
+            android:parentActivityName=".RentalMainActivity"
+            android:theme="@style/DialogTheme">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.sainath.rentalapp.RentalMainActivity" />
         </activity>
 
-        <activity android:name=".SelectLocationActivity"
-            android:parentActivityName=".PostMainActivity" >
+        <activity
+            android:name=".SelectLocationActivity"
+            android:parentActivityName=".PostMainActivity">
 
-            </activity>
+        </activity>
+
         <service
             android:name="com.service.rentalapp.FetchAddressIntentService"
-            android:exported="false"/>
+            android:exported="false" />
     </application>
 
 </manifest>

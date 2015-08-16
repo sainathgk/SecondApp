@@ -2,13 +2,11 @@ package com.sainath.rentalapp;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
@@ -29,23 +27,30 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.connection.rentalapp.NetworkConnUtility;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.service.rentalapp.Constants;
 import com.service.rentalapp.FetchAddressIntentService;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Random;
 
 public class PostMainActivity extends ActionBarActivity
         implements OnClickListener,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener {
 
+    private static final int MIN_NUM = 1;
+    private static final int MAX_NUM = 1000;
     int REQUEST_CAMERA = 0, SELECT_FILE = 1;
     Button btnSelect;
     ImageView ivImage;
@@ -101,18 +106,8 @@ public class PostMainActivity extends ActionBarActivity
         isActivityFirstCreated = true;
 
         mCategorySpinner = ((Spinner) findViewById(R.id.category));
-        //mCategorySpinner.setOnItemSelectedListener(this);
         mDurationSpinner = ((Spinner) findViewById(R.id.duration_select));
-        //mDurationSpinner.setOnItemSelectedListener(this);
 
-        /*btnSelect = (Button) findViewById(R.id.btnSelectPhoto);
-        btnSelect.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                selectImage();
-            }
-        });*/
         ivImage = (ImageView) findViewById(R.id.ivImage);
         ivImage.setOnClickListener(new OnClickListener() {
             @Override
@@ -127,62 +122,22 @@ public class PostMainActivity extends ActionBarActivity
                 Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_LONG).show();
                 mEdit = (EditText) findViewById(R.id.title);
                 textTitle = mEdit.getText().toString();
-                //  Log.v(TAG, textTitle);
-                //mEdit = (EditText)findViewById(R.id.category);
-                /*mSpin = (Spinner) findViewById(R.id.category);
-                textCategory = mEdit.getText().toString();*/
-                //  Log.v(TAG, textCategory);
+
                 mEdit = (EditText) findViewById(R.id.desc);
                 textDesc = mEdit.getText().toString();
-                //  Log.v(TAG, textDesc);
+
                 mEdit = (EditText) findViewById(R.id.price);
                 textPrice = mEdit.getText().toString();
-                //  Log.v(TAG, textPrice);
+
                 mEdit = (EditText) findViewById(R.id.location);
                 textLoc = mEdit.getText().toString();
-                //   Log.v(TAG, textLoc);
-                /*mEdit = (EditText)findViewById(R.id.name);
-                textName = mEdit.getText().toString();
-             //   Log.v(TAG, textName);
-                mEdit = (EditText)findViewById(R.id.email);
-                textEmail = mEdit.getText().toString();
-             //   Log.v(TAG, textEmail);
-                mEdit = (EditText)findViewById(R.id.phone);
-                textPhone = mEdit.getText().toString();*/
-                //  Log.v(TAG, textPhone);
+
                 fillDb();
             }
         });
 
     }
 
-    /*@Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-
-        switch (view.getId()) {
-            case R.id.category:
-                textCategory = parent.getItemAtPosition(position).toString();
-                break;
-
-            case R.id.duration_select:
-                mDuration = parent.getItemAtPosition(position).toString();
-                break;
-        }
-    }
-
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-        switch (parent.getId()) {
-            case R.id.category:
-                textCategory = "Other";
-                break;
-
-            case R.id.duration_select:
-                mDuration = "Hour";
-                break;
-        }
-    }
-*/
     private byte[] getByteArrayfromBitmap(Bitmap imgBitmap) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
         imgBitmap.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
@@ -190,9 +145,22 @@ public class PostMainActivity extends ActionBarActivity
         return bytes.toByteArray();
     }
 
+    private int randInt() {
+
+        // NOTE: Usually this should be a field rather than a method
+        // variable so that it is not re-seeded every call.
+        Random rand = new Random();
+
+        // nextInt is normally exclusive of the top value,
+        // so add 1 to make it inclusive
+        int randomNum = rand.nextInt((MAX_NUM - MIN_NUM) + 1) + MIN_NUM;
+
+        return randomNum;
+    }
+
     private void fillDb() {
 
-        ContentValues values = new ContentValues();
+        /*ContentValues values = new ContentValues();
         values.put("POST_TITLE", textTitle);
 
         values.put("POST_DESCRIPTION", textDesc);
@@ -206,24 +174,46 @@ public class PostMainActivity extends ActionBarActivity
         Canvas canvas = new Canvas(bitmap);
         ivImage.draw(canvas);
         values.put("POST_IMAGE", getByteArrayfromBitmap(bitmap));
-        /*values.put("POST_NAME",textName);
-		values.put("POST_EMAIL",textEmail);
-		values.put("POST_MOBILE", Integer.parseInt(textPhone));*/
 
-        getApplicationContext().getContentResolver().insert(Uri.parse("content://com.database.rentalapp/POST_TABLE"), values);
+        getApplicationContext().getContentResolver().insert(Uri.parse("content://com.database.rentalapp/POST_TABLE"), values);*/
 
-        /*Cursor rental_cursor = getApplicationContext().getContentResolver().query(Uri.parse("content://com.rentalapp/POST_TABLE"), null, null, null, null);
-        if(rental_cursor != null && rental_cursor.moveToFirst())
-        {
-            Toast.makeText(getApplicationContext(), "Rental Data - "+rental_cursor.getString(rental_cursor.getColumnIndex("POST_TITLE")), Toast.LENGTH_SHORT).show();
-            Log.v(TAG, rental_cursor.getString(rental_cursor.getColumnIndex("POST_TITLE")));
-            Log.v(TAG, rental_cursor.getString(rental_cursor.getColumnIndex("POST_DESCRIPTION")));
-            Log.v(TAG, rental_cursor.getString(rental_cursor.getColumnIndex("POST_PRICE")));
-            Log.v(TAG, rental_cursor.getString(rental_cursor.getColumnIndex("POST_CATEGORY")));
-            Log.v(TAG, rental_cursor.getString(rental_cursor.getColumnIndex("POST_LOCATION")));
-            rental_cursor.close();
-        }*/
-        finish();
+        Log.i("Sainath", "JSON Connection is started");
+        final JSONObject postItem = new JSONObject();
+        try {
+            postItem.put("id",randInt());
+            postItem.put("category", mCategorySpinner.getSelectedItem().toString());
+            postItem.put("subcategory", mCategorySpinner.getSelectedItem().toString());
+            postItem.put("name", textTitle);
+            postItem.put("description", textDesc);
+            postItem.put("age",2.0f);
+            postItem.put("duration", mDurationSpinner.getSelectedItemPosition());
+            postItem.put("price", Float.parseFloat(textPrice));
+            postItem.put("userName", "Sainath");
+            postItem.put("startTime", System.currentTimeMillis());
+            postItem.put("endTime", System.currentTimeMillis());
+            postItem.put("insured", null);
+            postItem.put("distance", null);
+            postItem.put("thumbnailList", null);
+            postItem.put("binaryList", null);
+
+            Log.i("Sainath", "JSON Connection is ended");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        NetworkConnUtility networkConnection = new NetworkConnUtility();
+        NetworkResp networkResp = new NetworkResp();
+
+        networkConnection.setNetworkListener(networkResp);
+        networkConnection.saveItem(postItem.toString());
+    }
+
+    private class NetworkResp implements NetworkConnUtility.NetworkResponseListener {
+        @Override
+        public void onResponse(String urlString, String networkResult) {
+            Toast.makeText(getApplicationContext(), "HTTP Connection is Done "+networkResult, Toast.LENGTH_SHORT).show();
+            finish();
+        }
     }
 
     private void selectImage() {

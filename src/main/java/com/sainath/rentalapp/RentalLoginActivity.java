@@ -5,7 +5,6 @@ import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -21,8 +20,6 @@ import android.support.v7.app.ActionBarActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
@@ -33,11 +30,18 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.connection.rentalapp.NetworkConnUtility;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.plus.People;
 import com.google.android.gms.plus.Plus;
+import com.google.android.gms.plus.model.people.Person;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +51,7 @@ import java.util.List;
  * A login screen that offers login via email/password.
  */
 public class RentalLoginActivity extends ActionBarActivity implements LoaderCallbacks<Cursor>,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnClickListener {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnClickListener, ResultCallback<People.LoadPeopleResult> {
 
     private static final String TAG = RentalLoginActivity.class.toString();
     /**
@@ -67,9 +71,9 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-   /* private CallbackManager callbackManager;
-    private Boolean isFacebookLoggedIn = false;
-    private LoginButton fbLoginBtn = null;*/
+    /* private CallbackManager callbackManager;
+     private Boolean isFacebookLoggedIn = false;
+     private LoginButton fbLoginBtn = null;*/
     private GoogleApiClient mGoogleClient = null;
     private static final int RC_SIGN_IN = 0;
     /* Is there a ConnectionResult resolution in progress? */
@@ -117,12 +121,11 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
         });*/
 
         mGoogleClient = new GoogleApiClient.Builder(this)
-                                .addConnectionCallbacks(this)
-                                .addOnConnectionFailedListener(this)
-                                .addApi(Plus.API)
-                                .addScope(new Scope(Scopes.PLUS_LOGIN))
-                                .addScope(new Scope(Scopes.PLUS_ME))
-                                .build();
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Plus.API)
+                .addScope(new Scope(Scopes.PROFILE))
+                .build();
 
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -307,18 +310,86 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
 
     }
 
+    private class NetworkResp implements NetworkConnUtility.NetworkResponseListener {
+        @Override
+        public void onResponse(String urlString, String networkResult) {
+            Toast.makeText(getApplicationContext(), "User Details are Saved " + networkResult, Toast.LENGTH_SHORT).show();
+            finish();
+        }
+    }
+
     @Override
     public void onConnected(Bundle bundle) {
         Log.d(TAG, "onConnected:" + bundle);
+        JSONObject userDetails = null;
         mShouldResolve = false;
-        //String gName = Plus.PeopleApi.getCurrentPerson(mGoogleClient).getDisplayName();
+
         String gName = Plus.AccountApi.getAccountName(mGoogleClient);
-        Log.i(TAG, "Google Account Name "+gName);
-        Toast.makeText(getApplicationContext(), "Google Account Name "+gName, Toast.LENGTH_SHORT).show();
+        Log.i(TAG, "Google Account Name " + gName);
+
+        Plus.PeopleApi.loadVisible(mGoogleClient, null).setResultCallback(this);
+
         Intent result = new Intent();
-        result.putExtra("Name",gName);
+        if (Plus.PeopleApi.getCurrentPerson(mGoogleClient) != null) {
+            Person currentPerson = Plus.PeopleApi.getCurrentPerson(mGoogleClient);
+
+            userDetails = fetchUserDetails(currentPerson);
+
+            try {
+                userDetails.put("emailId", gName);
+                userDetails.put("userName", gName.substring(0,gName.indexOf('@')));
+                userDetails.put("password", gName);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            result.putExtra("User", userDetails.toString());
+        }
+
         setResult(1001, result);
-        finish();
+
+        if (userDetails != null) {
+            try {
+                userDetails.put("mobileNumber", String.valueOf(123456789));
+                userDetails.put("officeNumber", String.valueOf(123456789));
+                userDetails.put("initials", "Mr.");
+                userDetails.remove("Image");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            NetworkConnUtility networkConnection = new NetworkConnUtility();
+            NetworkResp networkResp = new NetworkResp();
+
+            networkConnection.setNetworkListener(networkResp);
+            networkConnection.saveUser(userDetails.toString());
+        }
+        //finish();
+    }
+
+    private JSONObject fetchUserDetails(Person user) {
+        JSONObject userProfile = new JSONObject();
+
+        try {
+            if (user.hasDisplayName()) {
+                userProfile.put("firstName", user.getDisplayName());
+                userProfile.put("lastName", user.getDisplayName());
+            }
+
+            if (user.hasBirthday())
+                userProfile.put("birthDate", user.getBirthday());
+            else
+                userProfile.put("birthDate", System.currentTimeMillis());
+
+            if (user.hasGender())
+                userProfile.put("gender", user.getGender());
+
+            if (user.hasImage())
+                userProfile.put("Image", user.getImage().getUrl());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return userProfile;
     }
 
     @Override
@@ -360,6 +431,10 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
             mShouldResolve = true;
             mGoogleClient.connect();
         }
+    }
+
+    @Override
+    public void onResult(People.LoadPeopleResult loadPeopleResult) {
     }
 
     private interface ProfileQuery {
@@ -423,56 +498,6 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
             mGoogleClient.connect();
         }
         /*callbackManager.onActivityResult(requestCode, resultCode, data);*/
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        //getMenuInflater().inflate(R.menu.mainmenu, menu);
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
-        int id = item.getItemId();
-
-        switch (id)
-        {
-            case R.id.sign_out:
-                Toast.makeText(getApplicationContext(), "Sign out is clicked", Toast.LENGTH_SHORT).show();
-               /* if(isFacebookLoggedIn)
-                    isFacebookLoggedIn = false;*/
-                if (mGoogleClient.isConnected()) {
-                    Plus.AccountApi.clearDefaultAccount(mGoogleClient);
-                    mGoogleClient.disconnect();
-                }
-                break;
-            case R.id.map_show:
-                Intent mapIntent = new Intent(this, RentalMapsActivity.class);
-                startActivity(mapIntent);
-                break;
-
-            case R.id.insert_post:
-                ContentValues values = new ContentValues();
-                values.put("POST_TITLE", "Sainath");
-                values.put("POST_DESCRIPTION", "Sainath");
-                values.put("POST_PRICE", "100");
-                values.put("POST_CATEGORY", "Camera");
-                values.put("POST_LOCATION", "Bangalore");
-
-                getApplicationContext().getContentResolver().insert(Uri.parse("content://com.rentalapp/POST_TABLE"),values);
-                break;
-
-            case R.id.query_post:
-                Cursor rental_cursor = getApplicationContext().getContentResolver().query(Uri.parse("content://com.rentalapp/POST_TABLE"), null, null, null, null);
-                if(rental_cursor != null && rental_cursor.moveToFirst())
-                {
-                    Toast.makeText(getApplicationContext(), "Rental Data - "+rental_cursor.getString(rental_cursor.getColumnIndex("POST_TITLE")), Toast.LENGTH_SHORT).show();
-                    rental_cursor.close();
-                }
-                break;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     /**

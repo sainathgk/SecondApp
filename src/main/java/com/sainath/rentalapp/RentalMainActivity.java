@@ -1,26 +1,30 @@
 package com.sainath.rentalapp;
 
-import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.location.Location;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
-import android.support.v4.app.Fragment;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.EditText;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.connection.rentalapp.NetworkConnUtility;
+import com.connection.rentalapp.NetworkConstants;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
@@ -36,26 +40,24 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 
 public class RentalMainActivity extends AppCompatActivity
-        implements NavigationDrawerFragment.NavigationDrawerCallbacks,
-        OnMapReadyCallback,
+        implements OnMapReadyCallback,
         GoogleMap.OnMyLocationButtonClickListener,
         GoogleMap.OnMarkerClickListener,
         GoogleMap.OnInfoWindowClickListener,
         GoogleApiClient.OnConnectionFailedListener,
         GoogleApiClient.ConnectionCallbacks,
         View.OnClickListener,
-        LocationListener {
-
-    /**
-     * Fragment managing the behaviors, interactions and presentation of the navigation drawer.
-     */
-    private NavigationDrawerFragment mNavigationDrawerFragment;
+        LocationListener, AdapterView.OnItemSelectedListener {
 
     private NavigationView navigationView;
 
@@ -63,10 +65,14 @@ public class RentalMainActivity extends AppCompatActivity
 
     private Toolbar toolbar;
 
-    /**
-     * Used to store the last screen title. For use in {@link #restoreActionBar()}.
-     */
-    private CharSequence mTitle;
+    private Menu mDrawerMenu;
+
+    private MenuItem mLoginAction;
+    private MenuItem mLogoutAction;
+    private MenuItem mSearchAction;
+    private boolean isSearchOpened = false;
+    private EditText edtSeach;
+
     private GoogleMap mMap = null; // Might be null if Google Play services APK is not available.
     private GoogleApiClient mGoogleLocation;
     private LatLng myLoc = new LatLng(12.949652, 77.710938);
@@ -80,6 +86,15 @@ public class RentalMainActivity extends AppCompatActivity
             .setInterval(5000)         // 5 seconds
             .setFastestInterval(16)    // 16ms = 60fps
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    private String accUser = null;
+    private TextView mEmailText;
+    private Spinner mCategorySpin;
+    private String accMail = null;
+    private String accUserImageUrl = null;
+    private TextView mUsernameText;
+
+    NetworkConnUtility networkConnection = new NetworkConnUtility();
+    NetworkResp networkResp = new NetworkResp();
 
     private class PostsData {
         private String mPostId = null;
@@ -166,21 +181,21 @@ public class RentalMainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_rental_main);
 
-        /*mNavigationDrawerFragment = (NavigationDrawerFragment)
-                getSupportFragmentManager().findFragmentById(R.id.navigation_view);*/
-        mTitle = getTitle();
-
-        // Set up the drawer.
-        /*mNavigationDrawerFragment.setUp(
-                R.id.navigation_drawer,
-                (DrawerLayout) findViewById(R.id.drawer_layout));*/
-
         // Initializing Toolbar and setting it as the actionbar
         toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar.setTitle("");
         setSupportActionBar(toolbar);
 
         //Initializing NavigationView
         navigationView = (NavigationView) findViewById(R.id.navigation_view);
+
+        mDrawerMenu = navigationView.getMenu();
+        mLogoutAction = mDrawerMenu.findItem(R.id.logout);
+        mLoginAction = mDrawerMenu.findItem(R.id.login_opt);
+
+        mEmailText = ((TextView) findViewById(R.id.email));
+
+        mUsernameText = (TextView) findViewById(R.id.username);
 
         //Setting Navigation View Item Selected Listener to handle the item click of the navigation menu
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
@@ -191,26 +206,40 @@ public class RentalMainActivity extends AppCompatActivity
 
 
                 //Checking if the item is in checked state or not, if not make it in checked state
-                if(menuItem.isChecked()) menuItem.setChecked(false);
+                if (menuItem.isChecked()) menuItem.setChecked(false);
                 else menuItem.setChecked(true);
 
                 //Closing drawer on item click
                 drawerLayout.closeDrawers();
 
                 //Check to see which item was being clicked and perform appropriate action
-                switch (menuItem.getItemId()){
+                switch (menuItem.getItemId()) {
+
+                    case R.id.login_opt:
+                        startActivityForResult(new Intent(getApplicationContext(), RentalLoginActivity.class), 1001);
+                        break;
 
                     case R.id.my_ads:
-                        Toast.makeText(getApplicationContext(), "Menu from Drawer is called", Toast.LENGTH_SHORT).show();
+                        if (accUser != null)
+                            Toast.makeText(getApplicationContext(), "Menu from Drawer is called", Toast.LENGTH_SHORT).show();
+                        else
+                            startActivityForResult(new Intent(getApplicationContext(), RentalLoginActivity.class), 1001);
                         break;
 
                     case R.id.favourites:
+                        if (accUser != null)
+                            Toast.makeText(getApplicationContext(), "Menu from Drawer is called", Toast.LENGTH_SHORT).show();
+                        else
+                            startActivityForResult(new Intent(getApplicationContext(), RentalLoginActivity.class), 1001);
                         break;
 
                     case R.id.invite:
                         break;
 
                     case R.id.rateus:
+                        break;
+
+                    case R.id.logout:
                         break;
 
                     default:
@@ -222,7 +251,7 @@ public class RentalMainActivity extends AppCompatActivity
 
         // Initializing Drawer Layout and ActionBarToggle
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this,drawerLayout,toolbar,R.string.navigation_drawer_open, R.string.navigation_drawer_close){
+        ActionBarDrawerToggle actionBarDrawerToggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
 
             @Override
             public void onDrawerClosed(View drawerView) {
@@ -234,6 +263,17 @@ public class RentalMainActivity extends AppCompatActivity
             public void onDrawerOpened(View drawerView) {
                 // Code here will be triggered once the drawer open as we dont want anything to happen so we leave this blank
 
+                if (mLogoutAction != null && mLoginAction != null && drawerView != null) {
+                    if (accMail != null) {
+                        mLogoutAction.setVisible(true);
+                        mLoginAction.setVisible(false);
+                    } else {
+                        mLogoutAction.setVisible(false);
+                        mLoginAction.setVisible(true);
+                    }
+
+                    drawerView.invalidate();
+                }
                 super.onDrawerOpened(drawerView);
             }
         };
@@ -244,6 +284,9 @@ public class RentalMainActivity extends AppCompatActivity
         //calling sync state is necessay or else your hamburger icon wont show up
         actionBarDrawerToggle.syncState();
 
+        mCategorySpin = (Spinner) findViewById(R.id.spinner_category);
+
+        mCategorySpin.setOnItemSelectedListener(this);
 
         ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMapAsync(this);
 
@@ -261,77 +304,98 @@ public class RentalMainActivity extends AppCompatActivity
         mIconsList.put("Televisions", R.drawable.ic_tv_black_36dp);
         mIconsList.put("Others", R.mipmap.ic_launcher);
 
-        /*getApplicationContext().getContentResolver().registerContentObserver(Uri.parse("content://com.rentalapp/POST_TABLE"), true, new ContentObserver(null) {
-            @Override
-            public void onChange(boolean selfChange, Uri uri) {
-                super.onChange(selfChange, uri);
-                Toast.makeText(getApplicationContext(), "Data is Inserted", Toast.LENGTH_SHORT).show();
-                Cursor rentalCursor = getApplicationContext().getContentResolver().query(Uri.parse("content://com.rentalapp/POST_TABLE"), null, null, null, null);
-                if(rentalCursor != null && rentalCursor.moveToFirst())
-                {
-                    String name = rentalCursor.getString(rentalCursor.getColumnIndex("POST_TITLE"));
-
-                    if(mMap != null)
-                    {
-                        mMap.addMarker(new MarkerOptions().position(myLoc).title(name));
-                    }
-                }
-            }
-        });*/
-    }
-
-    @Override
-    public void onNavigationDrawerItemSelected(int position) {
-        // update the main content by replacing fragments
-        /*FragmentManager fragmentManager = getSupportFragmentManager();
-        fragmentManager.beginTransaction()
-                .replace(R.id.container, PlaceholderFragment.newInstance(position + 1))
-                .commit();*/
-        Toast.makeText(getApplicationContext(), "Drawer selected - " + position, Toast.LENGTH_SHORT).show();
-    }
-
-    public void onSectionAttached(int number) {
-        switch (number) {
-            case 1:
-                mTitle = getString(R.string.title_section1);
-                break;
-            case 2:
-                mTitle = getString(R.string.title_section2);
-                break;
-            case 3:
-                mTitle = getString(R.string.title_section3);
-                break;
-            case 4:
-                mTitle = getString(R.string.title_section4);
-                break;
-            case 5:
-                mTitle = getString(R.string.title_section5);
-                break;
-            case 6:
-                mTitle = getString(R.string.title_section6);
-                break;
+        if (networkConnection != null) {
+            networkConnection.setNetworkListener(networkResp);
         }
     }
 
-    public void restoreActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
-        actionBar.setDisplayShowTitleEnabled(true);
-        actionBar.setDisplayShowHomeEnabled(true);
-        actionBar.setTitle(mTitle);
+    private class NetworkResp implements NetworkConnUtility.NetworkResponseListener {
+        @Override
+        public void onResponse(String urlString, String networkResult) {
+            //Toast.makeText(getApplicationContext(), "HTTP Connection is Done " + networkResult, Toast.LENGTH_SHORT).show();
+            if (urlString.equalsIgnoreCase(accUserImageUrl)) {
+                Log.i("Sainath", "Hello");
+                // TODO : convert the Image string to Bitmap & set to Profile
+            }
+
+            if (urlString.equalsIgnoreCase(NetworkConstants.GET_ITEMS)) try {
+                JSONObject searchResult = new JSONObject(networkResult);
+                JSONObject itemDetails;
+                JSONArray resultArray = searchResult.getJSONArray("items");
+                int itemCount = resultArray.length();
+                for (int itemIdx = 0; itemIdx < itemCount; itemIdx++) {
+                    itemDetails = resultArray.getJSONObject(itemIdx);
+
+                    PostsData postsData = new PostsData();
+                    postsData.setPostTitle(itemDetails.getString("name"));
+                    postsData.setPostDescription(itemDetails.getString("description"));
+                    postsData.setPostCategory(itemDetails.getString("category"));
+                    postsData.setPostPrice(itemDetails.getInt("price"));
+                    String[] duration = getResources().getStringArray(R.array.post_duration);
+                    postsData.setPostDuration(duration[itemDetails.getInt("duration")]);
+                    //postsData.setPostImage(rentalCursor.getBlob(rentalCursor.getColumnIndex("POST_IMAGE")));
+
+                       /* Double latLocation = rentalCursor.getDouble(rentalCursor.getColumnIndex("POST_LATITUDE"));
+                        Double longLocation = rentalCursor.getDouble(rentalCursor.getColumnIndex("POST_LONGITUDE"));*/
+
+                    postsData.setLocationCoords(myLoc);
+
+                    mPostDataList.add(postsData);
+                }
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            addMarkersToMap();
+        }
     }
 
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        String mCategorySelected = parent.getItemAtPosition(position).toString();
+
+        JSONObject searchList = new JSONObject();
+        JSONObject category = new JSONObject();
+        JSONObject subcategory = new JSONObject();
+        JSONArray search = new JSONArray();
+
+        try {
+            category.put("name", "CATEGORY");
+            category.put("value", mCategorySelected);
+            subcategory.put("name", "SUBCATEGORY");
+            subcategory.put("value", mCategorySelected);
+
+            search.put(category);
+            search.put(subcategory);
+
+            searchList.put("searchList", search);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        if (networkConnection != null) {
+            networkConnection.getItemsByCategory(searchList.toString());
+        }
+
+        Toast.makeText(getApplicationContext(), "Item Selected is " + mCategorySelected, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("userProfile", accUser);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        /*if (!mNavigationDrawerFragment.isDrawerOpen()) {
-            // Only show items in the action bar relevant to this screen
-            // if the drawer is not showing. Otherwise, let the drawer
-            // decide what to show in the action bar.
-            getMenuInflater().inflate(R.menu.rental_main, menu);
-            restoreActionBar();
-            return true;
-        }*/
+        getMenuInflater().inflate(R.menu.global, menu);
+        mSearchAction = menu.findItem(R.id.action_search);
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -347,20 +411,18 @@ public class RentalMainActivity extends AppCompatActivity
             return true;
         }
 
+        if (id == R.id.action_search) {
+            handleMenuSearch();
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
     @Override
     public void onClick(View v) {
         if (v.getId() == R.id.imageButton) {
-            //Toast.makeText(getApplicationContext(), "Search Activity will be launched", Toast.LENGTH_SHORT).show();
             startActivity(new Intent(this, PostMainActivity.class));
         }
-        /*if (v.getId() == R.id.button) {
-            //TBD Launch Add Post Activity
-            //Toast.makeText(getApplicationContext(), "Post a Rental Ad Activity will be Launched ", Toast.LENGTH_SHORT).show();
-            startActivity(new Intent(this, PostMainActivity.class));
-        }*/
     }
 
     @Override
@@ -372,41 +434,37 @@ public class RentalMainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+
         mGoogleLocation.connect();
-        if (mMap != null)
-            mMap.clear();
-
-        Cursor rentalCursor = getApplicationContext().getContentResolver().query(Uri.parse("content://com.database.rentalapp/POST_TABLE"), null, null, null, null);
-        if (rentalCursor != null && rentalCursor.getCount() > 0) {
-            mPostDataList.clear();
-
-            while (rentalCursor.moveToNext()) {
-                String name = rentalCursor.getString(rentalCursor.getColumnIndex("POST_TITLE"));
-
-                Log.i("Sainath", "DB Entry - " + name);
-                PostsData postsData = new PostsData();
-                postsData.setPostTitle(name);
-                postsData.setPostDescription(rentalCursor.getString(rentalCursor.getColumnIndex("POST_DESCRIPTION")));
-                postsData.setPostCategory(rentalCursor.getString(rentalCursor.getColumnIndex("POST_CATEGORY")));
-                postsData.setPostPrice(rentalCursor.getInt(rentalCursor.getColumnIndex("POST_PRICE")));
-                postsData.setPostDuration(rentalCursor.getString(rentalCursor.getColumnIndex("POST_DURATION")));
-                postsData.setPostImage(rentalCursor.getBlob(rentalCursor.getColumnIndex("POST_IMAGE")));
-
-                Double latLocation = rentalCursor.getDouble(rentalCursor.getColumnIndex("POST_LATITUDE"));
-                Double longLocation = rentalCursor.getDouble(rentalCursor.getColumnIndex("POST_LONGITUDE"));
-
-                postsData.setLocationCoords(new LatLng(latLocation, longLocation));
-
-                mPostDataList.add(postsData);
-            }
-            rentalCursor.close();
-        }
+        /*if (mMap != null)
+            mMap.clear();*/
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 1001) {
-            String accName = data.getStringExtra("Name");
+        if (requestCode == 1001 && data != null) {
+            accUser = data.getStringExtra("User");
+            JSONObject userObj = null;
+
+            try {
+                userObj = new JSONObject(accUser);
+                if (userObj != null) {
+                    if (mEmailText != null) {
+                        accMail = userObj.getString("emailId");
+                        mEmailText.setText(accMail);
+                        mEmailText.setVisibility(View.VISIBLE);
+                    }
+                    if (mUsernameText != null) {
+                        mUsernameText.setText("Hello " + userObj.getString("firstName"));
+                    }
+                    accUserImageUrl = userObj.getString("Image");
+                    if (networkConnection != null && accUserImageUrl != null) {
+                        networkConnection.getUserProfileImage(accUserImageUrl);
+                    }
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
         super.onActivityResult(requestCode, resultCode, data);
     }
@@ -430,11 +488,6 @@ public class RentalMainActivity extends AppCompatActivity
                 detailPost.putInt("price", mPostDataList.get(pos).getPostPrice());
                 detailPost.putString("duration", mPostDataList.get(pos).getPostDuration());
                 detailPost.putByteArray("image", mPostDataList.get(pos).getPostImage());
-            /*markerIntent.putExtra("title", mPostDataList.get(pos).getPostTitle());
-            markerIntent.putExtra("description", mPostDataList.get(pos).getPostDescription());
-            markerIntent.putExtra("price", mPostDataList.get(pos).getPostPrice());
-            markerIntent.putExtra("duration", mPostDataList.get(pos).getPostDuration());
-            markerIntent.putExtra("image", mPostDataList.get(pos).getPostImage());*/
                 markerIntent.putExtra("post_detail", detailPost);
                 break;
             }
@@ -443,15 +496,36 @@ public class RentalMainActivity extends AppCompatActivity
         startActivity(markerIntent);
     }
 
+    private void addMarkersToMap() {
+        if (mPostDataList != null && mPostDataList.size() > 0) {
+            MarkerOptions myMarker_3 = new MarkerOptions();
+            for (int position = 0; position < mPostDataList.size(); position++) {
+                if (myMarker_3 != null) {
+                    myMarker_3.position(mPostDataList.get(position).getLocationCoords());
+                    myMarker_3.title(mPostDataList.get(position).getPostTitle());
+                    myMarker_3.snippet(mPostDataList.get(position).getPostDescription());
+                    String category = mPostDataList.get(position).getPostCategory();
+                    int resId;
+                    if (mIconsList.containsKey(category)) {
+                        resId = mIconsList.get(category);
+                    } else {
+                        resId = mIconsList.get("Others");
+                    }
+                    myMarker_3.icon(BitmapDescriptorFactory.fromResource(resId));
+                    mPostDataList.get(position).setPostId(mMap.addMarker(myMarker_3).getId());
+                } else {
+                    Toast.makeText(getApplicationContext(), "Marker Options is null", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+
+    }
+
     @Override
     public void onConnected(Bundle bundle) {
-        /*LocationServices.FusedLocationApi.requestLocationUpdates(
-                mGoogleLocation,
-                REQUEST,
-                this);*/
         Location loc = LocationServices.FusedLocationApi.getLastLocation(mGoogleLocation);
         if (loc != null) {
-            LatLng lng = new LatLng(loc.getLatitude(), loc.getLongitude());
+            myLoc = new LatLng(loc.getLatitude(), loc.getLongitude());
             /*MarkerOptions myMarker =
                     new MarkerOptions()
                             .position(lng)
@@ -486,23 +560,30 @@ public class RentalMainActivity extends AppCompatActivity
 
             mMap.addMarker(myMarker_3);*/
             //LatLng lng_3 = new LatLng(loc.getLatitude() - 0.00110, loc.getLongitude() - 0.00110);
-            if (mPostDataList != null && mPostDataList.size() > 0) {
+            /*if (mPostDataList != null && mPostDataList.size() > 0) {
                 MarkerOptions myMarker_3 = new MarkerOptions();
                 for (int position = 0; position < mPostDataList.size(); position++) {
                     if (myMarker_3 != null) {
                         myMarker_3.position(mPostDataList.get(position).getLocationCoords());
                         myMarker_3.title(mPostDataList.get(position).getPostTitle());
                         myMarker_3.snippet(mPostDataList.get(position).getPostDescription());
-                        myMarker_3.icon(BitmapDescriptorFactory.fromResource(mIconsList.get(mPostDataList.get(position).getPostCategory())));
+                        String category = mPostDataList.get(position).getPostCategory();
+                        int resId;
+                        if (mIconsList.containsKey(category)) {
+                            resId = mIconsList.get(category);
+                        } else {
+                            resId = mIconsList.get("Others");
+                        }
+                        myMarker_3.icon(BitmapDescriptorFactory.fromResource(resId));
                         mPostDataList.get(position).setPostId(mMap.addMarker(myMarker_3).getId());
                     } else {
                         Toast.makeText(getApplicationContext(), "Marker Options is null", Toast.LENGTH_SHORT).show();
                     }
                 }
-            }
+            }*/
             CameraPosition Location =
-                    new CameraPosition.Builder().target(lng)
-                            .zoom(16f)
+                    new CameraPosition.Builder().target(myLoc)
+                            .zoom(18f)
                             .build();
             mMap.animateCamera(CameraUpdateFactory.newCameraPosition(Location));
         }
@@ -523,9 +604,6 @@ public class RentalMainActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        //googleMap.setMyLocationEnabled(true);
-        //googleMap.setOnMyLocationButtonClickListener(this);
-        //googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(My_Location));
     }
 
     @Override
@@ -539,45 +617,61 @@ public class RentalMainActivity extends AppCompatActivity
 
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
+    protected void handleMenuSearch() {
+        ActionBar action = getSupportActionBar(); //get the actionbar
 
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
-            return fragment;
-        }
+        if (isSearchOpened) { //test if the search is open
 
-        public PlaceholderFragment() {
-        }
+            action.setDisplayShowCustomEnabled(false); //disable a custom view inside the actionbar
+            action.setDisplayShowTitleEnabled(true); //show the title in the action bar
 
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_rental_main, container, false);
+            mCategorySpin.setVisibility(View.VISIBLE);
+            //hides the keyboard
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.hideSoftInputFromWindow(edtSeach.getWindowToken(), 0);
 
-            return rootView;
-        }
+            //add the search icon in the action bar
+            mSearchAction.setIcon(getResources().getDrawable(R.drawable.ic_open_search));
 
-        @Override
-        public void onAttach(Activity activity) {
-            super.onAttach(activity);
-            ((RentalMainActivity) activity).onSectionAttached(
-                    getArguments().getInt(ARG_SECTION_NUMBER));
+            isSearchOpened = false;
+        } else { //open the search entry
+
+            action.setDisplayShowCustomEnabled(true); //enable it to display a
+            // custom view in the action bar.
+            mCategorySpin.setVisibility(View.GONE);
+            action.setCustomView(R.layout.search_bar);//add the custom view
+            action.setDisplayShowTitleEnabled(false); //hide the title
+
+            edtSeach = (EditText) action.getCustomView().findViewById(R.id.edtSearch); //the text editor
+
+            //this is a listener to do a search when the user clicks on search button
+            edtSeach.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                        doSearch();
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+
+            edtSeach.requestFocus();
+
+            //open the keyboard focused in the edtSearch
+            InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            imm.showSoftInput(edtSeach, InputMethodManager.SHOW_IMPLICIT);
+
+
+            //add the close icon
+            mSearchAction.setIcon(getResources().getDrawable(R.drawable.ic_close_search));
+
+            isSearchOpened = true;
         }
     }
 
+    private void doSearch() {
+        //
+    }
 }

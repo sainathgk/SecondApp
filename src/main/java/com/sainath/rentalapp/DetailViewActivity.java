@@ -47,10 +47,15 @@ public class DetailViewActivity extends FragmentActivity implements ActionBar.Ta
         WindowManager.LayoutParams params = this.getWindow().getAttributes();
         params.alpha = 1.0f;
         params.dimAmount = 0f;
+        /*params.flags = WindowManager.LayoutParams.MATCH_PARENT |
+                        WindowManager.LayoutParams.MATCH_PARENT  |
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN;*/
+
         this.getWindow().setAttributes((android.view.WindowManager.LayoutParams) params);
 
         // This sets the window size, while working around the IllegalStateException thrown by ActionBarView
-        this.getWindow().setLayout(600, 1000);
+        this.getWindow().setLayout(700, 1000);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail_view);
 
