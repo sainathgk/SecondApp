@@ -154,6 +154,10 @@ public class GoogleServicesUtility {
     public PersonProfileDetails makePersonProfile(Person personProfile, String personEmailId) {
         String userName = personEmailId.substring(0, personEmailId.indexOf('@'));
 
+        if (userProfile == null) {
+            userProfile = new PersonProfileDetails();
+        }
+
         userProfile.setEmailId(personEmailId);
         userProfile.setFirstName(personProfile.getDisplayName());
         userProfile.setLastName(personProfile.getDisplayName());

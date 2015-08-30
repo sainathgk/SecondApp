@@ -115,9 +115,18 @@ public class NetworkConnUtility {
                     if (mItemsCursor != null && mItemsCursor.getCount() > 0) {
 
                         try {
-                            while (mItemsCursor.moveToNext())
-                                itemsArray.put(jsonUtility.toJSON(mItemsCursor));
+                            while (mItemsCursor.moveToNext()) {
+                                JSONObject itemJson = jsonUtility.toJSON(mItemsCursor);
+                                String userName = itemJson.getString("userName");
+                                Cursor userCursor = mContext.getContentResolver().query(Uri.parse("content://com.database.rentalapp/USER_ADDRESS"), null, "userName == '" + userName + "'", null, null);
+                                if (userCursor != null && userCursor.getCount() > 0) {
+                                    userCursor.moveToFirst();
+                                    itemJson.put("Latitude", userCursor.getFloat(userCursor.getColumnIndex("Latitude")));
+                                    itemJson.put("Longitude", userCursor.getFloat(userCursor.getColumnIndex("Longitude")));
+                                }
 
+                                itemsArray.put(itemJson);
+                            }
                             itemsObject.put("items", itemsArray);
                             mItemsCursor.close();
                         } catch (JSONException e) {
@@ -234,6 +243,42 @@ public class NetworkConnUtility {
                         mCallbackListener.onResponse(NetworkConstants.SAVE_USER_ADDRESS, "Success");
                     } else {
                         mCallbackListener.onResponse(NetworkConstants.SAVE_USER_ADDRESS, "Failed");
+                    }
+                }
+            };
+            new Thread(runnable).run();
+        }
+    }
+
+    public void getUserAddress(final String userName) {
+        if (NetworkConstants.isServerON) {
+            if (userName != null) {
+                networkTask = new AsyncNetwork();
+                networkTask.executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, "GET", NetworkConstants.GET_USER_ADDRESS, userName);
+            }
+        } else {
+
+            Runnable runnable = new Runnable() {
+                public void run() {
+                    String[] itemColumns = {"userName", "houseNumber", "addressLine1", "addressLine2", "addressLine3", "addressLine4",
+                            "addressLine5", "Latitude", "Longitude"};
+                    Cursor mItemsCursor = mContext.getContentResolver().query(Uri.parse("content://com.database.rentalapp/USER_ADDRESS"), null, "userName == '" + userName +"'", null, null);
+                    String mItemsOutput = null;
+                    JSONUtility jsonUtility = new JSONUtility();
+                    if (mItemsCursor != null && mItemsCursor.getCount() > 0) {
+                        mItemsCursor.moveToFirst();
+                        try {
+                            mItemsOutput = jsonUtility.toJSON(mItemsCursor).toString();
+                            mItemsCursor.close();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    if (mItemsOutput != null) {
+                        Log.i("Sainath", mItemsOutput);
+                        mCallbackListener.onResponse(NetworkConstants.GET_USER_ADDRESS, mItemsOutput);
+                    } else {
+                        mCallbackListener.onResponse(NetworkConstants.GET_USER_ADDRESS, "Failed");
                     }
                 }
             };

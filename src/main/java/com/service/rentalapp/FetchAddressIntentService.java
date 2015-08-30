@@ -11,7 +11,7 @@ import android.os.ResultReceiver;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.sainath.rentalapp.R;
+import com.rental.rentalapp.R;
 
 import java.io.IOException;
 import java.util.ArrayList;
