@@ -19,9 +19,10 @@
 
     <style name="UITheme" parent="Theme.AppCompat.Light">
         <item name="android:actionBarStyle">@style/ActionBarWidgetTheme</item>
+        <item name="actionBarStyle">@style/ActionBarWidgetTheme</item>
     </style>
 
-    <style name="ActionBarWidgetTheme" parent="Widget.AppCompat.ActionBar">
+    <style name="ActionBarWidgetTheme" parent="Widget.AppCompat.Light.ActionBar.Solid.Inverse">
         <item name="android:background">@color/PrimaryColor</item>
         <item name="background">@color/PrimaryColor</item>
         <item name="android:elevation">4dp</item>
