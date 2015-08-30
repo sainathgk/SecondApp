@@ -1,62 +1,117 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="wrap_content" android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context=".DetailViewActivity"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:background="@android:color/white"
-    android:theme="@style/Base.Animation.AppCompat.Dialog">
+    tools:context=".DetailViewActivity">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <TextView android:id="@+id/section_label" android:layout_width="wrap_content"
+        <TextView
+            android:id="@+id/section_label"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:maxLines="2"
             android:text="Sony Cyber shot DSC-HX400V"
-            android:typeface="sans"
-            android:textStyle="bold"
-            android:textSize="18dp"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="@android:color/black"
-            android:maxLines="2" />
+            android:textSize="18dp"
+            android:textStyle="bold"
+            android:typeface="sans" />
 
         <ImageView
-            android:layout_width="fill_parent"
-            android:layout_height="250dp"
             android:id="@+id/detail_imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_below="@id/section_label"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="5dp"
-            android:src="@drawable/ic_photo_black_48dp"
-            android:scaleType="fitCenter" />
+            android:scaleType="fitXY"
+            android:src="@drawable/ic_photo_black_48dp" />
 
-        <TextView
+        <LinearLayout
+            android:id="@+id/fav_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Forces to display the icon always irrespective of space available. This way is not suggested. Forces to display the icon always irrespective of space available. This way is not suggested."
-            android:id="@+id/detail_desc_textView"
+            android:layout_alignParentRight="true"
             android:layout_below="@id/detail_imageView"
+            android:orientation="horizontal">
+
+            <CheckBox
+                android:id="@+id/fav_checkbox"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="10dp"
+                android:button="@drawable/ic_star_border_black_36dp"
+                android:singleLine="true"
+                android:text="Add to Favorites"
+                android:typeface="serif" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/detail_desc_textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:ellipsize="end"
+            android:layout_below="@id/fav_layout"
             android:layout_marginTop="5dp"
+            android:ellipsize="marquee"
+            android:maxLines="4"
+            android:padding="5dp"
+            android:text="Forces to display the icon always irrespective of space available. This way is not suggested. Forces to display the icon always irrespective of space available. This way is not suggested."
+            android:textAppearance="?android:attr/textAppearanceMedium"
             android:textColor="@android:color/black" />
 
         <TextView
+            android:id="@+id/price_textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceLarge"
-            android:text="@string/price_detail_view"
-            android:id="@+id/price_textView"
             android:layout_below="@id/detail_desc_textView"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp"
             android:layout_marginBottom="5dp"
+            android:layout_marginTop="5dp"
+            android:text="@string/price_detail_view"
+            android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="@android:color/black" />
 
-    </RelativeLayout>>
+        <TextView
+            android:id="@+id/break_line"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_below="@id/price_textView"
+            android:background="@android:color/black"
+            android:layout_margin="2dp" />
+
+        <de.hdodenhof.circleimageview.CircleImageView xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/detail_profile_image"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@id/break_line"
+            android:layout_margin="5dp"
+            android:background="@drawable/circular_shape"
+            android:src="@drawable/ic_person_black_36dp"
+            app:border_color="#FF000000" />
+
+        <TextView
+            android:id="@+id/detail_profile_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/break_line"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="30dp"
+            android:layout_toRightOf="@id/detail_profile_image"
+            android:singleLine="true"
+            android:text="Profile Name"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@android:color/black" />
+
+    </RelativeLayout>
+
 </ScrollView>

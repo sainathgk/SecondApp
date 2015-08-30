@@ -11,16 +11,25 @@ import android.util.Log;
 public class RentalContentProvider extends ContentProvider {
     private SQLiteDatabase mRentalDB = null;
     private Context mContext = null;
+    private String mTableName = null;
 
     public RentalContentProvider() {
 
         Log.i("Sainath", "Constructor of Rental Database");
     }
 
+    public void setDBTable(String tableName) {
+        mTableName = tableName;
+    }
+
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs) {
-        if(mRentalDB != null)
-            return mRentalDB.delete("POST_TABLE", selection, selectionArgs);
+        if (mRentalDB != null) {
+            mTableName = uri.toString();
+            mTableName = mTableName.substring(mTableName.lastIndexOf('/') + 1, mTableName.length());
+            return mRentalDB.delete(mTableName, selection, selectionArgs);
+        } else
+            Log.e("Sainath", "Delete Failed due to Table Name");
 
         return 0;
     }
@@ -36,8 +45,12 @@ public class RentalContentProvider extends ContentProvider {
     public Uri insert(Uri uri, ContentValues values) {
         // TODO: Implement this to handle requests to insert a new row.
         Log.i("Sainath", "On insert of Rental Database");
-        if(mRentalDB != null)
-            mRentalDB.insert("POST_TABLE", null, values);
+        if (mRentalDB != null) {
+            mTableName = uri.toString();
+            mTableName = mTableName.substring(mTableName.lastIndexOf('/') + 1, mTableName.length());
+            mRentalDB.insert(mTableName, null, values);
+        } else
+            Log.e("Sainath", "Insert Failed due to Table Name");
 
         return null;
     }
@@ -54,8 +67,12 @@ public class RentalContentProvider extends ContentProvider {
     @Override
     public Cursor query(Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
-        if(mRentalDB != null)
-            return mRentalDB.query("POST_TABLE", projection, selection, selectionArgs, null, null, sortOrder);
+        if (mRentalDB != null) {
+            mTableName = uri.toString();
+            mTableName = mTableName.substring(mTableName.lastIndexOf('/') + 1, mTableName.length());
+            return mRentalDB.query(mTableName, projection, selection, selectionArgs, null, null, sortOrder);
+        } else
+            Log.e("Sainath", "Query Failed due to Table Name");
 
         return null;
     }
@@ -63,8 +80,12 @@ public class RentalContentProvider extends ContentProvider {
     @Override
     public int update(Uri uri, ContentValues values, String selection,
                       String[] selectionArgs) {
-        if(mRentalDB != null)
-            return mRentalDB.update("POST_TABLE", values, selection, selectionArgs);
+        if (mRentalDB != null) {
+            mTableName = uri.toString();
+            mTableName = mTableName.substring(mTableName.lastIndexOf('/') + 1, mTableName.length());
+            return mRentalDB.update(mTableName, values, selection, selectionArgs);
+        } else
+            Log.e("Sainath", "Update Failed due to Table Name");
 
         return 0;
     }

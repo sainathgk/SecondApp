@@ -3,6 +3,7 @@ package com.sainath.rentalapp;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.app.LoaderManager.LoaderCallbacks;
 import android.content.ContentResolver;
 import android.content.CursorLoader;
@@ -30,7 +31,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.connection.rentalapp.GoogleServicesUtility;
 import com.connection.rentalapp.NetworkConnUtility;
+import com.connection.rentalapp.PersonProfileDetails;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.Scopes;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -40,9 +43,6 @@ import com.google.android.gms.plus.People;
 import com.google.android.gms.plus.Plus;
 import com.google.android.gms.plus.model.people.Person;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +51,9 @@ import java.util.List;
  * A login screen that offers login via email/password.
  */
 public class RentalLoginActivity extends ActionBarActivity implements LoaderCallbacks<Cursor>,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, OnClickListener, ResultCallback<People.LoadPeopleResult> {
+        OnClickListener, GoogleServicesUtility.GoogleServicesListener,
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+        ResultCallback<People.LoadPeopleResult> {
 
     private static final String TAG = RentalLoginActivity.class.toString();
     /**
@@ -74,13 +76,17 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
     /* private CallbackManager callbackManager;
      private Boolean isFacebookLoggedIn = false;
      private LoginButton fbLoginBtn = null;*/
-    private GoogleApiClient mGoogleClient = null;
+    private Activity mAct = null;
+
     private static final int RC_SIGN_IN = 0;
     /* Is there a ConnectionResult resolution in progress? */
     private boolean mIsResolving = false;
 
     /* Should we automatically resolve ConnectionResults when possible? */
     private boolean mShouldResolve = false;
+
+    private GoogleServicesUtility mGoogleLoginService = null;
+    private GoogleApiClient mGoogleLoginClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -120,12 +126,21 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
             }
         });*/
 
-        mGoogleClient = new GoogleApiClient.Builder(this)
+        mAct = (Activity) this;
+
+        mGoogleLoginClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(Plus.API)
                 .addScope(new Scope(Scopes.PROFILE))
                 .build();
+
+        mGoogleLoginService = GoogleServicesUtility.getGoogleInstance();
+
+        mGoogleLoginService.setGoogleServiceListener(this);
+        mGoogleLoginService.setGoogleLoginClient(mGoogleLoginClient);
+
+        //mGoogleLoginClient = mGoogleLoginService.getGoogleLoginClient();
 
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
@@ -310,86 +325,20 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
 
     }
 
-    private class NetworkResp implements NetworkConnUtility.NetworkResponseListener {
-        @Override
-        public void onResponse(String urlString, String networkResult) {
-            Toast.makeText(getApplicationContext(), "User Details are Saved " + networkResult, Toast.LENGTH_SHORT).show();
-            finish();
-        }
-    }
-
     @Override
     public void onConnected(Bundle bundle) {
-        Log.d(TAG, "onConnected:" + bundle);
-        JSONObject userDetails = null;
+        Person currentPerson = null;
         mShouldResolve = false;
+        String gName = Plus.AccountApi.getAccountName(mGoogleLoginClient);
 
-        String gName = Plus.AccountApi.getAccountName(mGoogleClient);
-        Log.i(TAG, "Google Account Name " + gName);
+        Plus.PeopleApi.loadVisible(mGoogleLoginClient, null).setResultCallback(this);
+        if (Plus.PeopleApi.getCurrentPerson(mGoogleLoginClient) != null) {
+            currentPerson = Plus.PeopleApi.getCurrentPerson(mGoogleLoginClient);
 
-        Plus.PeopleApi.loadVisible(mGoogleClient, null).setResultCallback(this);
-
-        Intent result = new Intent();
-        if (Plus.PeopleApi.getCurrentPerson(mGoogleClient) != null) {
-            Person currentPerson = Plus.PeopleApi.getCurrentPerson(mGoogleClient);
-
-            userDetails = fetchUserDetails(currentPerson);
-
-            try {
-                userDetails.put("emailId", gName);
-                userDetails.put("userName", gName.substring(0,gName.indexOf('@')));
-                userDetails.put("password", gName);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            result.putExtra("User", userDetails.toString());
+            onProfileFetch(mGoogleLoginService.makePersonProfile(currentPerson, gName));
+        } else {
+            Toast.makeText(getApplicationContext(), "Problem occurred in People Api", Toast.LENGTH_SHORT).show();
         }
-
-        setResult(1001, result);
-
-        if (userDetails != null) {
-            try {
-                userDetails.put("mobileNumber", String.valueOf(123456789));
-                userDetails.put("officeNumber", String.valueOf(123456789));
-                userDetails.put("initials", "Mr.");
-                userDetails.remove("Image");
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-
-            NetworkConnUtility networkConnection = new NetworkConnUtility();
-            NetworkResp networkResp = new NetworkResp();
-
-            networkConnection.setNetworkListener(networkResp);
-            networkConnection.saveUser(userDetails.toString());
-        }
-        //finish();
-    }
-
-    private JSONObject fetchUserDetails(Person user) {
-        JSONObject userProfile = new JSONObject();
-
-        try {
-            if (user.hasDisplayName()) {
-                userProfile.put("firstName", user.getDisplayName());
-                userProfile.put("lastName", user.getDisplayName());
-            }
-
-            if (user.hasBirthday())
-                userProfile.put("birthDate", user.getBirthday());
-            else
-                userProfile.put("birthDate", System.currentTimeMillis());
-
-            if (user.hasGender())
-                userProfile.put("gender", user.getGender());
-
-            if (user.hasImage())
-                userProfile.put("Image", user.getImage().getUrl());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return userProfile;
     }
 
     @Override
@@ -399,20 +348,18 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
 
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
-        // Could not connect to Google Play Services.  The user needs to select an account,
-        // grant permissions or resolve an error in order to sign in. Refer to the javadoc for
-        // ConnectionResult to see possible error codes.
         Log.d(TAG, "onConnectionFailed:" + connectionResult);
 
         if (!mIsResolving && mShouldResolve) {
             if (connectionResult.hasResolution()) {
                 try {
                     connectionResult.startResolutionForResult(this, RC_SIGN_IN);
+                    //mGoogleLoginClient.connect();
                     mIsResolving = true;
                 } catch (IntentSender.SendIntentException e) {
                     Log.e(TAG, "Could not resolve ConnectionResult.", e);
                     mIsResolving = false;
-                    mGoogleClient.connect();
+                    mGoogleLoginClient.connect();
                 }
             } else {
                 // Could not resolve the connection result, show the user an
@@ -426,15 +373,40 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
     }
 
     @Override
-    public void onClick(View v) {
-        if (v.getId() == R.id.sign_in_button) {
-            mShouldResolve = true;
-            mGoogleClient.connect();
+    public void onResult(People.LoadPeopleResult loadPeopleResult) {
+
+    }
+
+    private class NetworkResp implements NetworkConnUtility.NetworkResponseListener {
+        @Override
+        public void onResponse(String urlString, String networkResult) {
+            Toast.makeText(getApplicationContext(), "User Details are Saved " + networkResult, Toast.LENGTH_SHORT).show();
+            finish();
         }
     }
 
     @Override
-    public void onResult(People.LoadPeopleResult loadPeopleResult) {
+    public void onProfileFetch(PersonProfileDetails profile) {
+        Intent result = new Intent();
+        String profileResult = profile.toJSONString();
+
+        result.putExtra("User", profileResult);
+        setResult(1001, result);
+
+        NetworkConnUtility networkConnection = new NetworkConnUtility(getApplicationContext());
+        NetworkResp networkResp = new NetworkResp();
+
+        networkConnection.setNetworkListener(networkResp);
+        networkConnection.saveUser(profileResult);
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.sign_in_button) {
+            mShouldResolve = true;
+            //mGoogleLoginService.loginConnect();
+            mGoogleLoginClient.connect();
+        }
     }
 
     private interface ProfileQuery {
@@ -495,9 +467,9 @@ public class RentalLoginActivity extends ActionBarActivity implements LoaderCall
             }
 
             mIsResolving = false;
-            mGoogleClient.connect();
+            mGoogleLoginClient.connect();
         }
-        /*callbackManager.onActivityResult(requestCode, resultCode, data);*/
+       // mGoogleLoginService.onActivityResult(requestCode, resultCode, data);
     }
 
     /**

@@ -2,19 +2,51 @@
 <android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@android:color/holo_blue_dark"
-    android:theme="@style/ThemeOverlay.AppCompat.Dark"
+    android:background="@color/PrimaryColor"
     android:elevation="4dp"
-    android:paddingTop="4dp" >
+    android:title=""
+    android:theme="@style/ThemeOverlay.AppCompat">
 
     <Spinner
+        android:id="@+id/spinner_category"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:id="@+id/spinner_category"
-        android:singleLine="true"
+        android:layout_marginRight="5dp"
+        android:dropDownSelector="@color/PrimaryColor"
+        android:textAlignment="center"
         android:entries="@array/spin_category"
-        android:spinnerMode="dropdown">
-    </Spinner>
+        android:singleLine="true"
+        android:spinnerMode="dropdown"></Spinner>
 
+    <TextView
+        android:id="@+id/in_text"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginRight="2dp"
+        android:singleLine="true"
+        android:text="in"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@android:color/black" />
+
+    <Spinner
+        android:id="@+id/spinner_miles"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginRight="2dp"
+        android:dropDownSelector="@color/PrimaryColor"
+        android:textAlignment="center"
+        android:entries="@array/select_miles"
+        android:singleLine="true"
+        android:spinnerMode="dropdown"></Spinner>
+
+    <TextView
+        android:id="@+id/distance_text"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginRight="2dp"
+        android:singleLine="true"
+        android:text="Mi/KM"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:textColor="@android:color/black" />
 
 </android.support.v7.widget.Toolbar>

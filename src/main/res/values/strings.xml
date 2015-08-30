@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">RentalApp</string>
+    <string name="app_name">Rental</string>
     <string name="app_id">355198514515820</string>
     <string name="title_activity_rental_maps">Map</string>
     <string name="title_activity_rental_main">RentalMainActivity</string>
@@ -21,26 +21,44 @@
     <string name="action_settings">Sign Out</string>
 
     <string-array name="spin_category">
-        <item>Rental App</item>
-        <item>All</item>
-        <item>Cameras</item>
         <item>Cars</item>
         <item>Bikes</item>
-        <item>Mobiles or Tablets</item>
-        <item>Televisions</item>
+        <item>Cameras</item>
+        <item>Mobiles</item>
+        <item>Tablets</item>
+        <item>TVs</item>
         <item>Printers</item>
         <item>Others</item>
     </string-array>
 
     <string name="category_title">Select Category</string>
     <string-array name="post_category">
-        <item>Cameras</item>
         <item>Cars</item>
         <item>Bikes</item>
-        <item>Mobiles or Tablets</item>
-        <item>Televisions</item>
+        <item>Cameras</item>
+        <item>Mobiles</item>
+        <item>Tablets</item>
+        <item>TVs</item>
         <item>Printers</item>
         <item>Others</item>
+    </string-array>
+
+    <string-array name="category_example">
+        <item>Ford</item>
+        <item>Suzuki</item>
+        <item>Canon</item>
+        <item>iPhone</item>
+        <item>Samsung</item>
+        <item>Sony</item>
+        <item>HP</item>
+        <item>Honda</item>
+    </string-array>
+
+    <string-array name="select_miles">
+        <item>1</item>
+        <item>2</item>
+        <item>5</item>
+        <item>10</item>
     </string-array>
 
     <string name="per_text">per</string>

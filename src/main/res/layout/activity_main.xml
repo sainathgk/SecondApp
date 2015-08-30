@@ -22,11 +22,11 @@
 
         <ImageView
             android:id="@+id/ivImage"
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:src="@drawable/ic_local_see_black_36dp"
             android:layout_gravity="center_horizontal"
-            android:scaleType="fitCenter"
+            android:scaleType="fitXY"
             android:background="@android:drawable/gallery_thumb" />
 
     <EditText
@@ -143,13 +143,14 @@
         android:hint="Phone Number"
         android:visibility="gone" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Done"
+    <ImageButton
+        android:layout_width="60dp"
+        android:layout_height="60dp"
         android:id="@+id/done"
         android:layout_gravity="center_horizontal"
-        android:background="@drawable/round_button"
+        android:src="@drawable/ic_done_black_36dp"
+        android:elevation="15dp"
+        android:background="@drawable/circular_shape"
         android:layout_marginTop="10dp" />
         </LinearLayout>
     </ScrollView>

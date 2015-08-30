@@ -10,9 +10,17 @@ import android.util.Log;
  */
 public class RentalDatabaseHelper extends SQLiteOpenHelper {
 
-    private final static String POST_TABLE = "CREATE TABLE IF NOT EXISTS POST_TABLE (_ID INTEGER PRIMARY KEY AUTOINCREMENT ," +
-            "POST_TITLE TEXT NOT NULL, POST_DESCRIPTION TEXT NOT NULL, POST_PRICE INTEGER NOT NULL, POST_CATEGORY TEXT NOT NULL," +
-            "POST_LATITUDE INTEGER, POST_LONGITUDE INTEGER, POST_ADDRESS TEXT, POST_DURATION TEXT, POST_IMAGE BLOB) ";
+    private final static String POST_TABLE = "CREATE TABLE IF NOT EXISTS POST_TABLE (id INTEGER PRIMARY KEY AUTOINCREMENT ," +
+            "name TEXT NOT NULL, description TEXT NOT NULL, price INTEGER NOT NULL, category TEXT NOT NULL," +
+            "subcategory TEXT, POST_LATITUDE INTEGER, POST_LONGITUDE INTEGER, POST_ADDRESS TEXT, duration TEXT, " +
+            "thumbnailList BLOB, userName TEXT) ";
+
+    private static final String USER_DETAILS = "CREATE TABLE IF NOT EXISTS USER_DETAILS (userName TEXT, password TEXT, firstName TEXT, " +
+            "lastName TEXT, initials TEXT, birthDate INTEGER, gender TEXT, emailId TEXT, mobileNumber TEXT, " +
+            "officeNumber TEXT, profileImage TEXT) ";
+
+    private static final String USER_ADDRESS = "CREATE TABLE IF NOT EXISTS USER_ADDRESS (userName TEXT, houseNumber TEXT, addressLine1 TEXT," +
+            "addressLine2 TEXT, addressLine3 TEXT, addressLine4 TEXT, addressLine5 TEXT, Latitude INTEGER, Longitude INTEGER)";
 
     public RentalDatabaseHelper(Context context) {
         super(context, "RentalPost", null, 1);
@@ -21,6 +29,8 @@ public class RentalDatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(POST_TABLE);
+        db.execSQL(USER_DETAILS);
+        db.execSQL(USER_ADDRESS);
         Log.i("Sainath", "On Create of Rental DB Helper");
     }
 

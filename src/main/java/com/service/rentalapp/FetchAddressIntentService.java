@@ -70,7 +70,7 @@ public class FetchAddressIntentService extends IntentService {
         if (location == null) {
             errorMessage = getString(R.string.no_location_data_provided);
             Log.wtf(TAG, errorMessage);
-            deliverResultToReceiver(Constants.FAILURE_RESULT, errorMessage);
+            deliverResultToReceiver(Constants.FAILURE_RESULT, errorMessage, null);
             return;
         }
 
@@ -116,7 +116,7 @@ public class FetchAddressIntentService extends IntentService {
                 errorMessage = getString(R.string.no_address_found);
                 Log.e(TAG, errorMessage);
             }
-            deliverResultToReceiver(Constants.FAILURE_RESULT, errorMessage);
+            deliverResultToReceiver(Constants.FAILURE_RESULT, errorMessage, null);
         } else {
             Address address = addresses.get(0);
             ArrayList<String> addressFragments = new ArrayList<String>();
@@ -135,16 +135,25 @@ public class FetchAddressIntentService extends IntentService {
             }
             Log.i(TAG, getString(R.string.address_found));
             deliverResultToReceiver(Constants.SUCCESS_RESULT,
-                    TextUtils.join(System.getProperty("line.separator"), addressFragments));
+                    TextUtils.join(System.getProperty("line.separator"), addressFragments), address.getPostalCode());
+
+            /*deliverAddressToReceiver(Constants.SUCCESS_RESULT, address);*/
         }
     }
 
     /**
      * Sends a resultCode and message to the receiver.
      */
-    private void deliverResultToReceiver(int resultCode, String message) {
+    private void deliverResultToReceiver(int resultCode, String message, String postalCode) {
         Bundle bundle = new Bundle();
         bundle.putString(Constants.RESULT_DATA_KEY, message);
+        bundle.putString("postalCode", postalCode);
+        mReceiver.send(resultCode, bundle);
+    }
+
+    private void deliverAddressToReceiver(int resultCode, Address resAddress) {
+        Bundle bundle = new Bundle();
+        bundle.putParcelable("address",resAddress);
         mReceiver.send(resultCode, bundle);
     }
 }

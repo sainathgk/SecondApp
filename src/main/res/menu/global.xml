@@ -5,6 +5,19 @@
         android:title="@string/search"
         android:orderInCategory="200"
         android:icon="@drawable/ic_open_search"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
+        />
+    <item android:id="@+id/action_by_category"
+        android:title="Search by Item"
+        app:showAsAction="never"
+        android:visible="false"
+        android:checkable="true"
+        android:checked="true"
+        />
+    <item android:id="@+id/action_by_location"
+        android:title="Search by Location"
+        app:showAsAction="never"
+        android:visible="false"
+        android:checkable="true"
         />
 </menu>

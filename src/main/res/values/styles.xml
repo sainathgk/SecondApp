@@ -3,11 +3,12 @@
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:colorPrimary">@color/PrimaryColor</item>
-        <item name="android:colorPrimaryDark">@color/PrimaryDarkColor</item>
+        <item name="android:colorPrimaryDark">@android:color/transparent</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="DialogTheme" parent="android:Theme.Holo.Light.Dialog">
+    <style name="DialogTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:windowIsFloating">false</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowSoftInputMode">stateAlwaysHidden</item>
@@ -16,8 +17,14 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="UITheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <item name="android:statusBarColor">@android:color/transparent</item>
+    <style name="UITheme" parent="Theme.AppCompat.Light">
+        <item name="android:actionBarStyle">@style/ActionBarWidgetTheme</item>
+    </style>
+
+    <style name="ActionBarWidgetTheme" parent="Widget.AppCompat.ActionBar">
+        <item name="android:background">@color/PrimaryColor</item>
+        <item name="background">@color/PrimaryColor</item>
+        <item name="android:elevation">4dp</item>
     </style>
 
 </resources>

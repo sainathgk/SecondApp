@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
@@ -18,16 +19,21 @@ import android.provider.MediaStore;
 import android.provider.MediaStore.MediaColumns;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
+import android.util.Base64;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.connection.rentalapp.GoogleServicesUtility;
 import com.connection.rentalapp.NetworkConnUtility;
+import com.connection.rentalapp.PersonProfileDetails;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -54,7 +60,7 @@ public class PostMainActivity extends ActionBarActivity
     int REQUEST_CAMERA = 0, SELECT_FILE = 1;
     Button btnSelect;
     ImageView ivImage;
-    Button btnDone;
+    ImageButton btnDone;
     EditText mEdit;
     String mDuration;
     String textTitle;
@@ -85,7 +91,7 @@ public class PostMainActivity extends ActionBarActivity
     protected static final String LOCATION_ADDRESS_KEY = "location-address";
 
     private Boolean isActivityFirstCreated = false;
-
+    private DisplayMetrics mWindowMetrics = new DisplayMetrics();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,6 +101,8 @@ public class PostMainActivity extends ActionBarActivity
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
         actionBar.setDisplayShowTitleEnabled(true);
         actionBar.setTitle(R.string.title_activity_post);
+
+        getWindowManager().getDefaultDisplay().getMetrics(mWindowMetrics);
 
         mLocationEditTextView = (EditText) findViewById(R.id.location);
 
@@ -115,11 +123,11 @@ public class PostMainActivity extends ActionBarActivity
                 selectImage();
             }
         });
-        btnDone = (Button) findViewById(R.id.done);
+        btnDone = (ImageButton) findViewById(R.id.done);
         btnDone.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getApplicationContext(), "Saved", Toast.LENGTH_LONG).show();
+
                 mEdit = (EditText) findViewById(R.id.title);
                 textTitle = mEdit.getText().toString();
 
@@ -132,7 +140,15 @@ public class PostMainActivity extends ActionBarActivity
                 mEdit = (EditText) findViewById(R.id.location);
                 textLoc = mEdit.getText().toString();
 
-                fillDb();
+                GoogleServicesUtility gLoginUtility = GoogleServicesUtility.getGoogleInstance();
+                PersonProfileDetails curUserDetails = null;
+                String curUserName = null;
+                if (gLoginUtility != null && (curUserDetails = gLoginUtility.getPersonDetails()) != null
+                                            && (curUserName = curUserDetails.getUsername()) != null) {
+                    fillDb(curUserName);
+                } else {
+                    startActivityForResult(new Intent(getApplicationContext(), RentalLoginActivity.class), 1001);
+                }
             }
         });
 
@@ -140,7 +156,7 @@ public class PostMainActivity extends ActionBarActivity
 
     private byte[] getByteArrayfromBitmap(Bitmap imgBitmap) {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        imgBitmap.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        imgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
 
         return bytes.toByteArray();
     }
@@ -158,7 +174,7 @@ public class PostMainActivity extends ActionBarActivity
         return randomNum;
     }
 
-    private void fillDb() {
+    private void fillDb(String userName) {
 
         /*ContentValues values = new ContentValues();
         values.put("POST_TITLE", textTitle);
@@ -177,23 +193,41 @@ public class PostMainActivity extends ActionBarActivity
 
         getApplicationContext().getContentResolver().insert(Uri.parse("content://com.database.rentalapp/POST_TABLE"), values);*/
 
+        if (textTitle.isEmpty()) {
+            Toast.makeText(getApplicationContext(), "Title is Mandatory, Please Input", Toast.LENGTH_SHORT).show();
+            ((EditText) findViewById(R.id.title)).requestFocus();
+            return;
+        } else if (textDesc.isEmpty()) {
+            Toast.makeText(getApplicationContext(), "Description is Mandatory, Please Input", Toast.LENGTH_SHORT).show();
+            ((EditText) findViewById(R.id.desc)).requestFocus();
+            return;
+        } else if (textPrice.isEmpty()) {
+            Toast.makeText(getApplicationContext(), "Price is Mandatory, Please Input", Toast.LENGTH_SHORT).show();
+            ((EditText) findViewById(R.id.price)).requestFocus();
+            return;
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(ivImage.getWidth(), ivImage.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        ivImage.draw(canvas);
+
         Log.i("Sainath", "JSON Connection is started");
         final JSONObject postItem = new JSONObject();
         try {
-            postItem.put("id",randInt());
+            postItem.put("id", randInt());
             postItem.put("category", mCategorySpinner.getSelectedItem().toString());
             postItem.put("subcategory", mCategorySpinner.getSelectedItem().toString());
             postItem.put("name", textTitle);
             postItem.put("description", textDesc);
-            postItem.put("age",2.0f);
+            postItem.put("age", 2.0f);
             postItem.put("duration", mDurationSpinner.getSelectedItemPosition());
             postItem.put("price", Float.parseFloat(textPrice));
-            postItem.put("userName", "Sainath");
+            postItem.put("userName", userName);
             postItem.put("startTime", System.currentTimeMillis());
             postItem.put("endTime", System.currentTimeMillis());
             postItem.put("insured", null);
             postItem.put("distance", null);
-            postItem.put("thumbnailList", null);
+            postItem.put("thumbnailList", Base64.encodeToString(getByteArrayfromBitmap(bitmap), Base64.DEFAULT));
             postItem.put("binaryList", null);
 
             Log.i("Sainath", "JSON Connection is ended");
@@ -201,7 +235,7 @@ public class PostMainActivity extends ActionBarActivity
             e.printStackTrace();
         }
 
-        NetworkConnUtility networkConnection = new NetworkConnUtility();
+        NetworkConnUtility networkConnection = new NetworkConnUtility(getApplicationContext());
         NetworkResp networkResp = new NetworkResp();
 
         networkConnection.setNetworkListener(networkResp);
@@ -211,7 +245,7 @@ public class PostMainActivity extends ActionBarActivity
     private class NetworkResp implements NetworkConnUtility.NetworkResponseListener {
         @Override
         public void onResponse(String urlString, String networkResult) {
-            Toast.makeText(getApplicationContext(), "HTTP Connection is Done "+networkResult, Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Posted Successfully " + networkResult, Toast.LENGTH_SHORT).show();
             finish();
         }
     }
@@ -256,6 +290,17 @@ public class PostMainActivity extends ActionBarActivity
             else if (requestCode == 101) {
                 mLastLocation = data.getParcelableExtra("new_Location");
                 startIntentService();
+            } else if (requestCode == 1001) {
+                String accUser = data.getStringExtra("User");
+                JSONObject userObj = null;
+                try {
+                    userObj = new JSONObject(accUser);
+                    if (userObj != null) {
+                        fillDb(userObj.getString("userName"));
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -263,7 +308,7 @@ public class PostMainActivity extends ActionBarActivity
     private void onCaptureImageResult(Intent data) {
         Bitmap thumbnail = (Bitmap) data.getExtras().get("data");
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        thumbnail.compress(Bitmap.CompressFormat.JPEG, 90, bytes);
+        thumbnail.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
 
         File destination = new File(Environment.getExternalStorageDirectory(),
                 System.currentTimeMillis() + ".jpg");
@@ -435,6 +480,12 @@ public class PostMainActivity extends ActionBarActivity
 
             // Display the address string or an error message sent from the intent service.
             mAddressOutput = resultData.getString(Constants.RESULT_DATA_KEY);
+            /*ArrayList<String> addressFragments = new ArrayList<String>();
+            Address curAddress = resultData.getParcelable(Constants.RESULT_DATA_KEY);
+            for(int i = 0; i < curAddress.getMaxAddressLineIndex(); i++) {
+                addressFragments.add(curAddress.getAddressLine(i));
+            }
+            mAddressOutput = TextUtils.join(System.getProperty("line.separator"), addressFragments);*/
             displayAddressOutput();
 
             // Show a toast message if an address was found.
